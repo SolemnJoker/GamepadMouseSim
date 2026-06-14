@@ -15,9 +15,9 @@ public:
     void stop();
 
 signals:
-    void gamepadStateChanged(const GamepadState& state);
-    void gamepadConnected();
-    void gamepadDisconnected();
+    void gamepadStateChanged(int controllerIndex, const GamepadState& state);
+    void gamepadConnected(int controllerIndex);
+    void gamepadDisconnected(int controllerIndex);
 
 private:
     class PollThread : public QThread {
@@ -33,5 +33,5 @@ private:
 
     XInputWrapper m_xinput;
     PollThread m_thread;
-    GamepadState m_prevState;
+    GamepadState m_prevState[4];
 };

@@ -51,37 +51,39 @@ static float applyDeadzone(float x, float y, float deadzone, float& outX, float&
 }
 
 void GamepadPoller::pollOnce() {
-    XINPUT_STATE xState;
-    bool connected = m_xinput.getState(0, &xState);
+    for (int i = 0; i < 4; ++i) {
+        XINPUT_STATE xState;
+        bool connected = m_xinput.getState(i, &xState);
 
-    GamepadState state;
-    state.connected = connected;
+        GamepadState state;
+        state.connected = connected;
 
-    if (connected) {
-        float lx = xState.Gamepad.sThumbLX / 32767.0f;
-        float ly = xState.Gamepad.sThumbLY / 32767.0f;
-        float rx = xState.Gamepad.sThumbRX / 32767.0f;
-        float ry = xState.Gamepad.sThumbRY / 32767.0f;
+        if (connected) {
+            float lx = xState.Gamepad.sThumbLX / 32767.0f;
+            float ly = xState.Gamepad.sThumbLY / 32767.0f;
+            float rx = xState.Gamepad.sThumbRX / 32767.0f;
+            float ry = xState.Gamepad.sThumbRY / 32767.0f;
 
-        float deadzone = 7849.0f / 32767.0f;
-        applyDeadzone(lx, ly, deadzone, state.leftX, state.leftY);
-        applyDeadzone(rx, ry, deadzone, state.rightX, state.rightY);
+            float deadzone = 7849.0f / 32767.0f;
+            applyDeadzone(lx, ly, deadzone, state.leftX, state.leftY);
+            applyDeadzone(rx, ry, deadzone, state.rightX, state.rightY);
 
-        state.leftTrigger = xState.Gamepad.bLeftTrigger / 255.0f;
-        state.rightTrigger = xState.Gamepad.bRightTrigger / 255.0f;
-        state.buttons = xState.Gamepad.wButtons;
+            state.leftTrigger = xState.Gamepad.bLeftTrigger / 255.0f;
+            state.rightTrigger = xState.Gamepad.bRightTrigger / 255.0f;
+            state.buttons = xState.Gamepad.wButtons;
+        }
+
+        uint16_t prevButtons = m_prevState[i].buttons;
+        bool wasConnected = m_prevState[i].connected;
+        state.prevButtons = prevButtons;
+        m_prevState[i] = state;
+
+        if (connected && !wasConnected) {
+            emit gamepadConnected(i);
+        } else if (!connected && wasConnected) {
+            emit gamepadDisconnected(i);
+        }
+
+        emit gamepadStateChanged(i, state);
     }
-
-    uint16_t prevButtons = m_prevState.buttons;
-    bool wasConnected = m_prevState.connected;
-    state.prevButtons = prevButtons;
-    m_prevState = state;
-
-    if (connected && !wasConnected) {
-        emit gamepadConnected();
-    } else if (!connected && wasConnected) {
-        emit gamepadDisconnected();
-    }
-
-    emit gamepadStateChanged(state);
 }
