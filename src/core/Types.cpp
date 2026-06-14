@@ -46,6 +46,7 @@ ButtonAction stringToAction(const QString& str) {
     if (str == "ScrollDown") return ButtonAction::ScrollDown;
     if (str == "ScrollLeft") return ButtonAction::ScrollLeft;
     if (str == "ScrollRight") return ButtonAction::ScrollRight;
+    if (str == "ShowHelp") return ButtonAction::ShowHelp;
     return ButtonAction::None;
 }
 
@@ -96,6 +97,7 @@ QString actionToString(ButtonAction action) {
     case ButtonAction::ScrollDown: return "ScrollDown";
     case ButtonAction::ScrollLeft: return "ScrollLeft";
     case ButtonAction::ScrollRight: return "ScrollRight";
+    case ButtonAction::ShowHelp: return "ShowHelp";
     default: return "None";
     }
 }

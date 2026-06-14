@@ -54,7 +54,8 @@ enum class ButtonAction {
     ScrollUp,
     ScrollDown,
     ScrollLeft,
-    ScrollRight
+    ScrollRight,
+    ShowHelp
 };
 
 struct GamepadState {
