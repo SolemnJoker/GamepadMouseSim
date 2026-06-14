@@ -1,0 +1,75 @@
+{
+  "monitoring": {
+    "process_list": ["steam.exe", "Cyberpunk2077.exe", "cs2.exe"],
+    "polling_interval_seconds": 2,
+    "manual_switch_lockout_seconds": 30
+  },
+  "combo_key": {
+    "buttons": ["View", "Menu"],
+    "hold_duration_ms": 1000
+  },
+  "mouse_mode": {
+    "left_stick": {
+      "sensitivity_x": 1.0,
+      "sensitivity_y": 1.0,
+      "deadzone": 0.15,
+      "acceleration": true
+    },
+    "right_stick": {
+      "scroll_speed_vertical": 1.0,
+      "scroll_speed_horizontal": 1.0,
+      "deadzone": 0.15
+    },
+    "button_mapping": {
+      "A": "MouseLeftClick",
+      "B": "MouseRightClick",
+      "X": "MouseMiddleClick",
+      "Y": "Enter",
+      "DpadUp": "VolumeUp",
+      "DpadDown": "VolumeDown",
+      "DpadLeft": "VolumeMute",
+      "DpadRight": "None",
+      "LB": "MouseLeftHold",
+      "RB": "MouseRightHold",
+      "LT": "None",
+      "RT": "None",
+      "L3": "Enter",
+      "R3": "Escape",
+      "View": "Tab",
+      "Menu": "Win"
+    },
+    "modifier_mapping": {
+      "LT": {
+        "X": "Alt+Tab",
+        "LB": "ShiftTab",
+        "RB": "Tab",
+        "A": "Enter",
+        "B": "Escape",
+        "Y": "Alt+F4",
+        "DpadUp": "ArrowUp",
+        "DpadDown": "ArrowDown",
+        "L3": "Ctrl+V",
+        "R3": "Ctrl+Z"
+      },
+      "RT": {
+        "DpadRight": "Ctrl+Tab",
+        "DpadLeft": "Ctrl+Shift+Tab",
+        "DpadUp": "PageUp",
+        "DpadDown": "PageDown",
+        "A": "Ctrl+A",
+        "B": "Ctrl+C",
+        "X": "Ctrl+X",
+        "Y": "Ctrl+V",
+        "LB": "None",
+        "RB": "Ctrl+S",
+        "L3": "Ctrl+Z",
+        "R3": "Ctrl+Shift+Z"
+      }
+    }
+  },
+  "osd": {
+    "enabled": true,
+    "duration_seconds": 2
+  },
+  "autostart": false
+}
