@@ -225,7 +225,50 @@ void KeyboardMapper::executeAction(ButtonAction action) {
     case ButtonAction::VolumeUp: SendInputHelper::mediaKey(VK_VOLUME_UP); break;
     case ButtonAction::VolumeDown: SendInputHelper::mediaKey(VK_VOLUME_DOWN); break;
     case ButtonAction::VolumeMute: SendInputHelper::mediaKey(VK_VOLUME_MUTE); break;
+    case ButtonAction::ShowHelp: {
+        QString helpText = buildHelpText();
+        emit showHelpRequested();
+        break;
+    }
     case ButtonAction::KeyWin: SendInputHelper::keyPress(VK_LWIN); SendInputHelper::keyRelease(VK_LWIN); break;
     default: break;
     }
+}
+
+QString KeyboardMapper::buildHelpText() const {
+    QStringList lines;
+    lines << "=== Gamepad Mouse Sim ===";
+    lines << "";
+    lines << "--- Direct Mapping ---";
+    for (auto it = m_directMapping.begin(); it != m_directMapping.end(); ++it) {
+        if (it.value() != ButtonAction::None) {
+            lines << QString("  %1 = %2").arg(it.key()).arg(actionToString(it.value()));
+        }
+    }
+    lines << "";
+    lines << "--- LT Layer (Hold LT) ---";
+    if (m_modifierMapping.contains("LT")) {
+        const auto& ltMap = m_modifierMapping.value("LT");
+        for (auto it = ltMap.begin(); it != ltMap.end(); ++it) {
+            if (it.value() != ButtonAction::None) {
+                lines << QString("  LT+%1 = %2").arg(it.key()).arg(actionToString(it.value()));
+            }
+        }
+    }
+    lines << "  LT+View = Switch Mode";
+    lines << "  LT+R3 = Show Help";
+    lines << "";
+    lines << "--- RT Layer (Hold RT) ---";
+    if (m_modifierMapping.contains("RT")) {
+        const auto& rtMap = m_modifierMapping.value("RT");
+        for (auto it = rtMap.begin(); it != rtMap.end(); ++it) {
+            if (it.value() != ButtonAction::None) {
+                lines << QString("  RT+%1 = %2").arg(it.key()).arg(actionToString(it.value()));
+            }
+        }
+    }
+    lines << "";
+    lines << "Left Stick = Move Mouse";
+    lines << "Right Stick = Scroll";
+    return lines.join("\n");
 }

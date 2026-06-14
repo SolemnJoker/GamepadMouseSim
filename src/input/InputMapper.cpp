@@ -1,15 +1,19 @@
 #include "InputMapper.h"
 #include <QDebug>
 
-InputMapper::InputMapper(Config* config, QObject* parent)
+InputMapper::InputMapper(Config* config, int controllerIndex, QObject* parent)
     : QObject(parent)
     , m_config(config)
+    , m_controllerIndex(controllerIndex)
     , m_mouseMapper(config, this)
     , m_keyboardMapper(config, this)
 {
+    connect(&m_keyboardMapper, &KeyboardMapper::showHelpRequested,
+            this, &InputMapper::showHelpRequested);
 }
 
-void InputMapper::onGamepadStateChanged(const GamepadState& state) {
+void InputMapper::onGamepadStateChanged(int controllerIndex, const GamepadState& state) {
+    if (controllerIndex != m_controllerIndex) return;
     if (!state.connected || m_mode != GamepadMode::Mouse) return;
 
     m_mouseMapper.processLeftStick(state.leftX, state.leftY);
@@ -40,11 +44,11 @@ void InputMapper::onGamepadStateChanged(const GamepadState& state) {
 
 void InputMapper::onModeChanged(GamepadMode mode) {
     m_mode = mode;
-    qDebug() << "InputMapper mode:" << (mode == GamepadMode::Mouse ? "Mouse" : "Default");
+    qDebug() << "InputMapper Pad" << m_controllerIndex << "mode:" << (mode == GamepadMode::Mouse ? "Mouse" : "Default");
 }
 
 void InputMapper::onConfigChanged() {
-    qDebug() << "InputMapper config changed, reloading";
+    qDebug() << "InputMapper Pad" << m_controllerIndex << "config changed, reloading";
     m_mouseMapper.onConfigChanged();
     m_keyboardMapper.onConfigChanged();
 }

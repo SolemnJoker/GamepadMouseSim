@@ -10,15 +10,21 @@ class Config;
 class InputMapper : public QObject {
     Q_OBJECT
 public:
-    explicit InputMapper(Config* config, QObject* parent = nullptr);
+    explicit InputMapper(Config* config, int controllerIndex, QObject* parent = nullptr);
+
+    QString helpText() const { return m_keyboardMapper.buildHelpText(); }
 
 public slots:
-    void onGamepadStateChanged(const GamepadState& state);
+    void onGamepadStateChanged(int controllerIndex, const GamepadState& state);
     void onModeChanged(GamepadMode mode);
     void onConfigChanged();
 
+signals:
+    void showHelpRequested();
+
 private:
     Config* m_config;
+    int m_controllerIndex;
     MouseMapper m_mouseMapper;
     KeyboardMapper m_keyboardMapper;
     GamepadMode m_mode = GamepadMode::Mouse;

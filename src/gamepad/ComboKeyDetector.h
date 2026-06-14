@@ -7,17 +7,18 @@
 class ComboKeyDetector : public QObject {
     Q_OBJECT
 public:
-    explicit ComboKeyDetector(QObject* parent = nullptr);
+    explicit ComboKeyDetector(int controllerIndex, QObject* parent = nullptr);
 
     void setHoldDuration(int ms) { m_holdDurationMs = ms; }
 
 public slots:
-    void onGamepadState(const GamepadState& state);
+    void onGamepadState(int controllerIndex, const GamepadState& state);
 
 signals:
-    void comboTriggered();
+    void comboTriggered(int controllerIndex);
 
 private:
+    int m_controllerIndex;
     QElapsedTimer m_holdTimer;
     bool m_holding = false;
     int m_holdDurationMs = kDefaultComboHoldMs;

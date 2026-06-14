@@ -6,14 +6,15 @@
 Application::Application(QObject* parent)
     : QObject(parent)
     , m_config(this)
-    , m_modeManager(&m_config, this)
-    , m_processDetector(this)
     , m_gamepadPoller(this)
-    , m_comboKeyDetector(this)
-    , m_inputMapper(&m_config, this)
     , m_systemTray(this)
     , m_osdOverlay(nullptr)
 {
+    for (int i = 0; i < kMaxGamepads; ++i) {
+        m_comboDetectors[i] = new ComboKeyDetector(i, this);
+        m_inputMappers[i] = new InputMapper(&m_config, i, this);
+        m_modeManagers[i] = new ModeManager(&m_config, i, this);
+    }
 }
 
 Application::~Application() {
@@ -37,37 +38,77 @@ bool Application::initialize() {
         qDebug() << "Config loaded successfully";
     }
 
-    m_inputMapper.onConfigChanged();
+    for (int i = 0; i < kMaxGamepads; ++i) {
+        m_inputMappers[i]->onConfigChanged();
+    }
 
     connect(&m_gamepadPoller, &GamepadPoller::gamepadStateChanged,
-            &m_comboKeyDetector, &ComboKeyDetector::onGamepadState);
-    connect(&m_gamepadPoller, &GamepadPoller::gamepadStateChanged,
-            &m_inputMapper, &InputMapper::onGamepadStateChanged);
+            this, [this](int idx, const GamepadState& state) {
+                if (idx < kMaxGamepads) {
+                    m_comboDetectors[idx]->onGamepadState(idx, state);
+                    m_inputMappers[idx]->onGamepadStateChanged(idx, state);
+                }
+            });
 
-    connect(&m_comboKeyDetector, &ComboKeyDetector::comboTriggered,
-            &m_modeManager, &ModeManager::manualSwitch);
+    for (int i = 0; i < kMaxGamepads; ++i) {
+        connect(m_comboDetectors[i], &ComboKeyDetector::comboTriggered,
+                this, [this](int idx) {
+                    if (idx < kMaxGamepads) {
+                        m_modeManagers[idx]->manualSwitch();
+                    }
+                });
+    }
 
-    connect(&m_modeManager, &ModeManager::modeChanged,
-            &m_inputMapper, &InputMapper::onModeChanged);
-    connect(&m_modeManager, &ModeManager::modeChanged,
-            &m_systemTray, &SystemTray::onModeChanged);
-    connect(&m_modeManager, &ModeManager::modeChanged,
-            &m_osdOverlay, &OsdOverlay::showModeChange);
+    for (int i = 0; i < kMaxGamepads; ++i) {
+        connect(m_modeManagers[i], &ModeManager::modeChanged,
+                this, [this](int idx, GamepadMode mode) {
+                    if (idx < kMaxGamepads) {
+                        m_inputMappers[idx]->onModeChanged(mode);
+                        m_systemTray.onModeChanged(idx, mode);
+                        m_osdOverlay.showModeChange(idx, mode);
+                    }
+                });
+    }
+
+    for (int i = 0; i < kMaxGamepads; ++i) {
+        connect(m_inputMappers[i], &InputMapper::showHelpRequested,
+                this, [this, i]() {
+                    m_osdOverlay.showHelp(m_inputMappers[i]->helpText());
+                });
+    }
 
     connect(&m_systemTray, &SystemTray::switchModeRequested,
-            &m_modeManager, &ModeManager::manualSwitch);
+            this, [this]() {
+                for (int i = 0; i < kMaxGamepads; ++i) {
+                    m_modeManagers[i]->manualSwitch();
+                }
+            });
     connect(&m_systemTray, &SystemTray::lockModeRequested,
-            &m_modeManager, &ModeManager::toggleLock);
+            this, [this]() {
+                for (int i = 0; i < kMaxGamepads; ++i) {
+                    m_modeManagers[i]->toggleLock();
+                }
+            });
     connect(&m_systemTray, &SystemTray::pauseRequested,
-            &m_modeManager, &ModeManager::togglePause);
+            this, [this]() {
+                for (int i = 0; i < kMaxGamepads; ++i) {
+                    m_modeManagers[i]->togglePause();
+                }
+            });
     connect(&m_systemTray, &SystemTray::exitRequested,
             qApp, &QApplication::quit);
 
-    connect(&m_config, &Config::configChanged, &m_modeManager, &ModeManager::onConfigChanged);
-    connect(&m_config, &Config::configChanged, &m_inputMapper, &InputMapper::onConfigChanged);
+    connect(&m_config, &Config::configChanged, this, [this]() {
+        for (int i = 0; i < kMaxGamepads; ++i) {
+            m_modeManagers[i]->onConfigChanged();
+            m_inputMappers[i]->onConfigChanged();
+        }
+    });
 
     m_gamepadPoller.start();
-    m_modeManager.start();
+    for (int i = 0; i < kMaxGamepads; ++i) {
+        m_modeManagers[i]->start();
+    }
     m_systemTray.show();
 
     return true;

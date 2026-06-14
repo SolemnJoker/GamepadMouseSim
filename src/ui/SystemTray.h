@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <array>
 #include "core/Types.h"
 
 class SystemTray : public QObject {
@@ -14,7 +15,7 @@ public:
     void hide();
 
 public slots:
-    void onModeChanged(GamepadMode mode);
+    void onModeChanged(int controllerIndex, GamepadMode mode);
 
 signals:
     void switchModeRequested();
@@ -27,6 +28,7 @@ private slots:
 
 private:
     void updateIcon(GamepadMode mode);
+    void updateTooltip();
 
     QSystemTrayIcon m_trayIcon;
     QMenu m_menu;
@@ -34,5 +36,6 @@ private:
     QAction* m_switchAction;
     QAction* m_lockAction;
     QAction* m_pauseAction;
-    GamepadMode m_mode = GamepadMode::Mouse;
+    std::array<GamepadMode, kMaxGamepads> m_padModes;
+    std::array<bool, kMaxGamepads> m_padConnected = {};
 };

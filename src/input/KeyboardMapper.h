@@ -16,11 +16,14 @@ public:
     void processTrigger(float leftTrigger, float rightTrigger,
                         float prevLeftTrigger, float prevRightTrigger);
 
+    QString buildHelpText() const;
+
 public slots:
     void onConfigChanged();
 
 signals:
     void scrollRequested(float dx, float dy);
+    void showHelpRequested();
 
 private:
     void loadConfig();

@@ -79,6 +79,7 @@ constexpr int kDefaultManualLockoutMs = 30000;
 constexpr int kDefaultComboHoldMs = 1000;
 constexpr int kGamepadPollHz = 60;
 constexpr int kGamepadPollIntervalMs = 1000 / kGamepadPollHz;
+constexpr int kMaxGamepads = 4;
 
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_UP = 0x0001;
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_DOWN = 0x0002;

@@ -2,9 +2,9 @@
 
 #include <QObject>
 #include <QApplication>
+#include <array>
 #include "core/Config.h"
 #include "core/ModeManager.h"
-#include "core/ProcessDetector.h"
 #include "gamepad/GamepadPoller.h"
 #include "gamepad/ComboKeyDetector.h"
 #include "input/InputMapper.h"
@@ -21,11 +21,11 @@ public:
 
 private:
     Config m_config;
-    ModeManager m_modeManager;
-    ProcessDetector m_processDetector;
     GamepadPoller m_gamepadPoller;
-    ComboKeyDetector m_comboKeyDetector;
-    InputMapper m_inputMapper;
     SystemTray m_systemTray;
     OsdOverlay m_osdOverlay;
+
+    std::array<ComboKeyDetector*, kMaxGamepads> m_comboDetectors;
+    std::array<InputMapper*, kMaxGamepads> m_inputMappers;
+    std::array<ModeManager*, kMaxGamepads> m_modeManagers;
 };
