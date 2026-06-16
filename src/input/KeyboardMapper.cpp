@@ -23,11 +23,20 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
         m_pressedButtons.insert(button);
     } else {
         m_pressedButtons.remove(button);
+        m_lockedActions.remove(button);
     }
 
     bool risingEdge = pressed && !wasPressed;
 
-    ButtonAction action = lookupAction(btnName);
+    ButtonAction action;
+    if (!risingEdge && m_lockedActions.contains(button)) {
+        action = m_lockedActions.value(button);
+    } else {
+        action = lookupAction(btnName);
+        if (risingEdge && (m_ltHeld || m_rtHeld)) {
+            m_lockedActions[button] = action;
+        }
+    }
 
     qDebug() << "Btn:" << btnName << "pressed=" << pressed
              << "rising=" << risingEdge
@@ -82,6 +91,7 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
                 qDebug() << "Sent Tab for cycling";
             } else {
                 m_ltTabActive = true;
+                m_altSent = true;
                 INPUT inputs[4] = {};
                 inputs[0].type = INPUT_KEYBOARD;
                 inputs[0].ki.wVk = VK_MENU;
@@ -107,32 +117,46 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
 
 void KeyboardMapper::processTrigger(float leftTrigger, float rightTrigger,
                                      float prevLeftTrigger, float prevRightTrigger) {
-    if (leftTrigger > 0.5f && !m_ltHeld) {
+    if (leftTrigger > 0.6f && !m_ltHeld) {
         m_ltHeld = true;
+        m_altSent = false;
         qDebug() << "LT pressed";
-    } else if (leftTrigger <= 0.5f && m_ltHeld) {
+    } else if (leftTrigger < 0.3f && m_ltHeld) {
         m_ltHeld = false;
         m_ltTabActive = false;
         m_ltTabBlocked.clear();
-        INPUT input = {};
-        input.type = INPUT_KEYBOARD;
-        input.ki.wVk = VK_MENU;
-        input.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(1, &input, sizeof(INPUT));
-        qDebug() << "LT released, Alt UP";
+        m_lockedActions.clear();
+        if (m_altSent) {
+            INPUT input = {};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = VK_MENU;
+            input.ki.dwFlags = KEYEVENTF_KEYUP;
+            SendInput(1, &input, sizeof(INPUT));
+            m_altSent = false;
+            qDebug() << "LT released, Alt UP";
+        } else {
+            qDebug() << "LT released (no Alt sent)";
+        }
     }
 
-    if (rightTrigger > 0.5f && !m_rtHeld) {
+    if (rightTrigger > 0.6f && !m_rtHeld) {
         m_rtHeld = true;
+        m_ctrlSent = false;
         qDebug() << "RT pressed";
-    } else if (rightTrigger <= 0.5f && m_rtHeld) {
+    } else if (rightTrigger < 0.3f && m_rtHeld) {
         m_rtHeld = false;
-        INPUT input = {};
-        input.type = INPUT_KEYBOARD;
-        input.ki.wVk = VK_CONTROL;
-        input.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(1, &input, sizeof(INPUT));
-        qDebug() << "RT released, Ctrl UP";
+        m_lockedActions.clear();
+        if (m_ctrlSent) {
+            INPUT input = {};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = VK_CONTROL;
+            input.ki.dwFlags = KEYEVENTF_KEYUP;
+            SendInput(1, &input, sizeof(INPUT));
+            m_ctrlSent = false;
+            qDebug() << "RT released, Ctrl UP";
+        } else {
+            qDebug() << "RT released (no Ctrl sent)";
+        }
     }
 }
 
@@ -141,21 +165,29 @@ void KeyboardMapper::releaseModifiers() {
         m_ltHeld = false;
         m_ltTabActive = false;
         m_ltTabBlocked.clear();
-        INPUT input = {};
-        input.type = INPUT_KEYBOARD;
-        input.ki.wVk = VK_MENU;
-        input.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(1, &input, sizeof(INPUT));
-        qDebug() << "Forced Alt UP on mode change";
+        m_lockedActions.clear();
+        if (m_altSent) {
+            INPUT input = {};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = VK_MENU;
+            input.ki.dwFlags = KEYEVENTF_KEYUP;
+            SendInput(1, &input, sizeof(INPUT));
+            m_altSent = false;
+            qDebug() << "Forced Alt UP on mode change";
+        }
     }
     if (m_rtHeld) {
         m_rtHeld = false;
-        INPUT input = {};
-        input.type = INPUT_KEYBOARD;
-        input.ki.wVk = VK_CONTROL;
-        input.ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(1, &input, sizeof(INPUT));
-        qDebug() << "Forced Ctrl UP on mode change";
+        m_lockedActions.clear();
+        if (m_ctrlSent) {
+            INPUT input = {};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = VK_CONTROL;
+            input.ki.dwFlags = KEYEVENTF_KEYUP;
+            SendInput(1, &input, sizeof(INPUT));
+            m_ctrlSent = false;
+            qDebug() << "Forced Ctrl UP on mode change";
+        }
     }
 }
 
@@ -214,14 +246,15 @@ void KeyboardMapper::executeAction(ButtonAction action) {
     case ButtonAction::KeyAltTab: SendInputHelper::keyCombo(VK_MENU, VK_TAB); break;
     case ButtonAction::KeyAltF4: SendInputHelper::keyCombo(VK_MENU, VK_F4); break;
     case ButtonAction::KeyWinD: SendInputHelper::keyCombo(VK_LWIN, 'D'); break;
-    case ButtonAction::KeyCtrlW: SendInputHelper::keyCombo(VK_CONTROL, 'W'); break;
-    case ButtonAction::KeyCtrlA: SendInputHelper::keyCombo(VK_CONTROL, 'A'); break;
-    case ButtonAction::KeyCtrlC: SendInputHelper::keyCombo(VK_CONTROL, 'C'); break;
-    case ButtonAction::KeyCtrlV: SendInputHelper::keyCombo(VK_CONTROL, 'V'); break;
-    case ButtonAction::KeyCtrlX: SendInputHelper::keyCombo(VK_CONTROL, 'X'); break;
-    case ButtonAction::KeyCtrlZ: SendInputHelper::keyCombo(VK_CONTROL, 'Z'); break;
-    case ButtonAction::KeyCtrlS: SendInputHelper::keyCombo(VK_CONTROL, 'S'); break;
+    case ButtonAction::KeyCtrlW: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'W'); break;
+    case ButtonAction::KeyCtrlA: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'A'); break;
+    case ButtonAction::KeyCtrlC: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'C'); break;
+    case ButtonAction::KeyCtrlV: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'V'); break;
+    case ButtonAction::KeyCtrlX: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'X'); break;
+    case ButtonAction::KeyCtrlZ: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'Z'); break;
+    case ButtonAction::KeyCtrlS: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, 'S'); break;
     case ButtonAction::KeyCtrlShiftZ: {
+        m_ctrlSent = true;
         INPUT inputs[6] = {};
         inputs[0].type = INPUT_KEYBOARD; inputs[0].ki.wVk = VK_CONTROL;
         inputs[1].type = INPUT_KEYBOARD; inputs[1].ki.wVk = VK_SHIFT;
@@ -232,8 +265,9 @@ void KeyboardMapper::executeAction(ButtonAction action) {
         SendInput(6, inputs, sizeof(INPUT));
         break;
     }
-    case ButtonAction::KeyCtrlTab: SendInputHelper::keyCombo(VK_CONTROL, VK_TAB); break;
+    case ButtonAction::KeyCtrlTab: m_ctrlSent = true; SendInputHelper::keyCombo(VK_CONTROL, VK_TAB); break;
     case ButtonAction::KeyCtrlShiftTab: {
+        m_ctrlSent = true;
         INPUT inputs[6] = {};
         inputs[0].type = INPUT_KEYBOARD; inputs[0].ki.wVk = VK_CONTROL;
         inputs[1].type = INPUT_KEYBOARD; inputs[1].ki.wVk = VK_SHIFT;

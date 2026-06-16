@@ -44,4 +44,8 @@ private:
     QSet<uint16_t> m_pressedButtons;
     QSet<uint16_t> m_ltTabBlocked;
     bool m_ltTabActive = false;
+
+    bool m_altSent = false;
+    bool m_ctrlSent = false;
+    QMap<uint16_t, ButtonAction> m_lockedActions;
 };

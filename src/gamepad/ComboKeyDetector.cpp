@@ -14,7 +14,7 @@ void ComboKeyDetector::onGamepadState(int controllerIndex, const GamepadState& s
         return;
     }
 
-    bool ltPressed = state.leftTrigger > 0.5f;
+    bool ltPressed = state.leftTrigger > 0.6f;
     bool viewPressed = (state.buttons & XINPUT_GAMEPAD_BACK) != 0;
 
     if (ltPressed && viewPressed) {
