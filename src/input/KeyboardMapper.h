@@ -15,6 +15,7 @@ public:
     void processButton(uint16_t button, bool pressed, uint16_t prevButtons);
     void processTrigger(float leftTrigger, float rightTrigger,
                         float prevLeftTrigger, float prevRightTrigger);
+    void releaseModifiers();
 
     QStringList buildHelpLines() const;
 

@@ -136,6 +136,29 @@ void KeyboardMapper::processTrigger(float leftTrigger, float rightTrigger,
     }
 }
 
+void KeyboardMapper::releaseModifiers() {
+    if (m_ltHeld) {
+        m_ltHeld = false;
+        m_ltTabActive = false;
+        m_ltTabBlocked.clear();
+        INPUT input = {};
+        input.type = INPUT_KEYBOARD;
+        input.ki.wVk = VK_MENU;
+        input.ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(1, &input, sizeof(INPUT));
+        qDebug() << "Forced Alt UP on mode change";
+    }
+    if (m_rtHeld) {
+        m_rtHeld = false;
+        INPUT input = {};
+        input.type = INPUT_KEYBOARD;
+        input.ki.wVk = VK_CONTROL;
+        input.ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(1, &input, sizeof(INPUT));
+        qDebug() << "Forced Ctrl UP on mode change";
+    }
+}
+
 ButtonAction KeyboardMapper::lookupAction(const QString& btnName) {
     if (m_ltHeld && m_modifierMapping.contains("LT")) {
         const auto& ltMap = m_modifierMapping.value("LT");

@@ -103,7 +103,7 @@ void OsdOverlay::paintEvent(QPaintEvent* event) {
     painter.setPen(Qt::white);
 
     if (m_isHelpMode) {
-        QFont font("Microsoft YaHei", 18);
+        QFont font("Microsoft YaHei", 25);
         painter.setFont(font);
         QFontMetrics fm(font);
         int lineHeight = fm.height() + 8;
