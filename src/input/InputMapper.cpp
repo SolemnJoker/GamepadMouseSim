@@ -16,19 +16,12 @@ void InputMapper::onGamepadStateChanged(int controllerIndex, const GamepadState&
     if (controllerIndex != m_controllerIndex) return;
     if (!state.connected) return;
 
+    if (m_mode != GamepadMode::Mouse) return;
+
     m_keyboardMapper.processTrigger(state.leftTrigger, state.rightTrigger,
                                     m_prevLeftTrigger, m_prevRightTrigger);
     m_prevLeftTrigger = state.leftTrigger;
     m_prevRightTrigger = state.rightTrigger;
-
-    if (m_mode != GamepadMode::Mouse) {
-        bool r3Pressed = (state.buttons & XINPUT_GAMEPAD_RIGHT_THUMB) != 0;
-        bool r3WasPressed = (state.prevButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != 0;
-        if (r3Pressed || r3WasPressed) {
-            m_keyboardMapper.processButton(XINPUT_GAMEPAD_RIGHT_THUMB, r3Pressed, state.prevButtons);
-        }
-        return;
-    }
 
     m_mouseMapper.processLeftStick(state.leftX, state.leftY);
     m_mouseMapper.processRightStick(state.rightX, state.rightY);
