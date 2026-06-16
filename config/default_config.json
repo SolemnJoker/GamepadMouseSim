@@ -26,7 +26,7 @@
       "DpadUp": "VolumeUp",
       "DpadDown": "VolumeDown",
       "DpadLeft": "VolumeMute",
-      "DpadRight": "None",
+      "DpadRight": "Win+D",
       "LB": "MouseLeftHold",
       "RB": "MouseRightHold",
       "LT": "None",

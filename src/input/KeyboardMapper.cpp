@@ -316,6 +316,9 @@ QStringList KeyboardMapper::buildHelpLines() const {
     lines << "  左摇杆  →  移动鼠标";
     lines << "  右摇杆  →  滚动页面";
     lines << "";
+    lines << "其他";
+    lines << "  DpadRight  →  显示桌面(Win+D)";
+    lines << "";
     lines << "模式切换";
     lines << "  L3+View(长按1秒)  →  切换模式";
     return lines;
