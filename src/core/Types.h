@@ -101,4 +101,5 @@ constexpr uint16_t XINPUT_TRIGGER_RIGHT = 0x200;
 
 ButtonAction stringToAction(const QString& str);
 QString actionToString(ButtonAction action);
+QString actionToChinese(ButtonAction action);
 QString buttonBitToName(uint16_t bit);

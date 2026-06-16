@@ -286,7 +286,7 @@ QStringList KeyboardMapper::buildHelpLines() const {
     lines << "直接映射";
     for (auto it = m_directMapping.begin(); it != m_directMapping.end(); ++it) {
         if (it.value() != ButtonAction::None) {
-            lines << QString("  %1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
+            lines << QString("  %1  →  %2").arg(it.key(), -10).arg(actionToChinese(it.value()));
         }
     }
     lines << "";
@@ -295,7 +295,7 @@ QStringList KeyboardMapper::buildHelpLines() const {
         const auto& l3Map = m_modifierMapping.value("L3");
         for (auto it = l3Map.begin(); it != l3Map.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << QString("  L3+%1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
+                lines << QString("  L3+%1  →  %2").arg(it.key(), -10).arg(actionToChinese(it.value()));
             }
         }
     }
@@ -307,7 +307,7 @@ QStringList KeyboardMapper::buildHelpLines() const {
         const auto& rtMap = m_modifierMapping.value("RT");
         for (auto it = rtMap.begin(); it != rtMap.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << QString("  RT+%1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
+                lines << QString("  RT+%1  →  %2").arg(it.key(), -10).arg(actionToChinese(it.value()));
             }
         }
     }

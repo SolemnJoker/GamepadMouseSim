@@ -102,6 +102,58 @@ QString actionToString(ButtonAction action) {
     }
 }
 
+QString actionToChinese(ButtonAction action) {
+    switch (action) {
+    case ButtonAction::MouseLeftClick: return "左键单击";
+    case ButtonAction::MouseRightClick: return "右键单击";
+    case ButtonAction::MouseMiddleClick: return "中键单击";
+    case ButtonAction::MouseLeftHold: return "左键按住";
+    case ButtonAction::MouseRightHold: return "右键按住";
+    case ButtonAction::KeyEnter: return "回车";
+    case ButtonAction::KeyEscape: return "退出";
+    case ButtonAction::KeyTab: return "Tab";
+    case ButtonAction::KeyBackspace: return "退格";
+    case ButtonAction::KeyDelete: return "删除";
+    case ButtonAction::KeyHome: return "Home";
+    case ButtonAction::KeyEnd: return "End";
+    case ButtonAction::KeyPageUp: return "上翻页";
+    case ButtonAction::KeyPageDown: return "下翻页";
+    case ButtonAction::KeyArrowUp: return "方向↑";
+    case ButtonAction::KeyArrowDown: return "方向↓";
+    case ButtonAction::KeyArrowLeft: return "方向←";
+    case ButtonAction::KeyArrowRight: return "方向→";
+    case ButtonAction::KeyShiftTab: return "Shift+Tab";
+    case ButtonAction::KeyAltTab: return "Alt+Tab";
+    case ButtonAction::KeyAltF4: return "Alt+F4";
+    case ButtonAction::KeyWinD: return "显示桌面";
+    case ButtonAction::KeyCtrlW: return "关闭标签";
+    case ButtonAction::KeyCtrlA: return "全选";
+    case ButtonAction::KeyCtrlC: return "复制";
+    case ButtonAction::KeyCtrlV: return "粘贴";
+    case ButtonAction::KeyCtrlX: return "剪切";
+    case ButtonAction::KeyCtrlZ: return "撤销";
+    case ButtonAction::KeyCtrlShiftZ: return "重做";
+    case ButtonAction::KeyCtrlS: return "保存";
+    case ButtonAction::KeyCtrlLeft: return "Ctrl+←";
+    case ButtonAction::KeyCtrlRight: return "Ctrl+→";
+    case ButtonAction::KeyCtrlTab: return "Ctrl+Tab";
+    case ButtonAction::KeyCtrlShiftTab: return "Ctrl+Shift+Tab";
+    case ButtonAction::KeyF5: return "刷新";
+    case ButtonAction::MediaPrevTrack: return "上一曲";
+    case ButtonAction::MediaNextTrack: return "下一曲";
+    case ButtonAction::VolumeUp: return "音量+";
+    case ButtonAction::VolumeDown: return "音量-";
+    case ButtonAction::VolumeMute: return "静音";
+    case ButtonAction::KeyWin: return "开始菜单";
+    case ButtonAction::ScrollUp: return "向上滚动";
+    case ButtonAction::ScrollDown: return "向下滚动";
+    case ButtonAction::ScrollLeft: return "向左滚动";
+    case ButtonAction::ScrollRight: return "向右滚动";
+    case ButtonAction::ShowHelp: return "显示帮助";
+    default: return "无";
+    }
+}
+
 QString buttonBitToName(uint16_t bit) {
     if (bit & XINPUT_GAMEPAD_A) return "A";
     if (bit & XINPUT_GAMEPAD_B) return "B";
