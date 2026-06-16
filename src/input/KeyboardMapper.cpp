@@ -15,6 +15,8 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
     QString btnName = buttonBitToName(button);
     if (btnName.isEmpty()) return;
 
+    if (m_ltHeld && button == XINPUT_GAMEPAD_BACK) return;
+
     bool wasPressed = m_pressedButtons.contains(button);
 
     if (pressed) {
