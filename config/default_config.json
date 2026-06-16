@@ -3,7 +3,7 @@
     "manual_switch_lockout_seconds": 3
   },
   "combo_key": {
-    "buttons": ["LT", "View"],
+    "buttons": ["L3", "View"],
     "hold_duration_ms": 1000
   },
   "mouse_mode": {
@@ -31,13 +31,13 @@
       "RB": "MouseRightHold",
       "LT": "None",
       "RT": "None",
-      "L3": "Enter",
+      "L3": "None",
       "R3": "Escape",
       "View": "Tab",
       "Menu": "Win"
     },
     "modifier_mapping": {
-      "LT": {
+      "L3": {
         "X": "Alt+Tab",
         "LB": "ShiftTab",
         "RB": "Tab",
@@ -46,7 +46,6 @@
         "Y": "Alt+F4",
         "DpadUp": "ArrowUp",
         "DpadDown": "ArrowDown",
-        "L3": "Ctrl+V",
         "R3": "ShowHelp"
       },
       "RT": {
@@ -60,7 +59,6 @@
         "Y": "Ctrl+V",
         "LB": "None",
         "RB": "Ctrl+S",
-        "L3": "Ctrl+Z",
         "R3": "Ctrl+Shift+Z"
       }
     }

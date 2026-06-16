@@ -15,7 +15,22 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
     QString btnName = buttonBitToName(button);
     if (btnName.isEmpty()) return;
 
-    if (m_ltHeld && button == XINPUT_GAMEPAD_BACK) return;
+    if (m_l3Held && button == XINPUT_GAMEPAD_BACK) return;
+
+    if (button == XINPUT_GAMEPAD_LEFT_THUMB) {
+        if (pressed) {
+            m_l3Held = true;
+        } else {
+            if (m_l3TabActive) {
+                keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
+            }
+            m_l3Held = false;
+            m_l3TabActive = false;
+            m_l3TabBlocked.clear();
+            m_lockedActions.clear();
+        }
+        return;
+    }
 
     bool wasPressed = m_pressedButtons.contains(button);
 
@@ -33,7 +48,7 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
         action = m_lockedActions.value(button);
     } else {
         action = lookupAction(btnName);
-        if (risingEdge && (m_ltHeld || m_rtHeld)) {
+        if (risingEdge && m_l3Held) {
             m_lockedActions[button] = action;
         }
     }
@@ -42,12 +57,13 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
              << "rising=" << risingEdge
              << "action=" << static_cast<int>(action);
 
-    bool isLtTab = m_ltHeld && (action == ButtonAction::KeyTab || action == ButtonAction::KeyShiftTab);
+    bool isL3Tab = m_l3Held && (action == ButtonAction::KeyTab || action == ButtonAction::KeyShiftTab);
+    bool isL3AltTab = m_l3Held && action == ButtonAction::KeyAltTab;
 
-    if (isLtTab && m_ltTabBlocked.contains(button)) {
+    if (isL3Tab && m_l3TabBlocked.contains(button)) {
         if (!pressed) {
-            m_ltTabBlocked.remove(button);
-            qDebug() << "LT Tab unblocked for" << btnName;
+            m_l3TabBlocked.remove(button);
+            qDebug() << "L3 Tab unblocked for" << btnName;
         }
         return;
     }
@@ -82,32 +98,27 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
     }
 
     if (risingEdge) {
-        if (isLtTab) {
-            m_ltTabBlocked.insert(button);
-            qDebug() << "LT Tab blocked for" << btnName;
-            if (m_ltTabActive) {
+        if (isL3AltTab) {
+            m_l3TabActive = true;
+            keybd_event(VK_MENU, 0, 0, 0);
+            keybd_event(VK_TAB, 0, 0, 0);
+            keybd_event(VK_TAB, 0, KEYEVENTF_KEYUP, 0);
+            qDebug() << "Sent Alt+Tab (L3 layer)";
+            return;
+        }
+        if (isL3Tab) {
+            m_l3TabBlocked.insert(button);
+            qDebug() << "L3 Tab blocked for" << btnName;
+            if (m_l3TabActive) {
                 keybd_event(VK_TAB, 0x0F, 0, 0);
                 keybd_event(VK_TAB, 0x0F, KEYEVENTF_KEYUP, 0);
                 qDebug() << "Sent Tab for cycling";
             } else {
-                m_ltTabActive = true;
-                m_altSent = true;
-                INPUT inputs[4] = {};
-                inputs[0].type = INPUT_KEYBOARD;
-                inputs[0].ki.wVk = VK_MENU;
-                if (action == ButtonAction::KeyShiftTab) {
-                    inputs[1].type = INPUT_KEYBOARD;
-                    inputs[1].ki.wVk = VK_SHIFT;
-                }
-                int tabIdx = (action == ButtonAction::KeyShiftTab) ? 2 : 1;
-                inputs[tabIdx].type = INPUT_KEYBOARD;
-                inputs[tabIdx].ki.wVk = VK_TAB;
-                inputs[tabIdx + 1].type = INPUT_KEYBOARD;
-                inputs[tabIdx + 1].ki.wVk = VK_TAB;
-                inputs[tabIdx + 1].ki.dwFlags = KEYEVENTF_KEYUP;
-                int count = (action == ButtonAction::KeyShiftTab) ? 4 : 3;
-                SendInput(count, inputs, sizeof(INPUT));
-                qDebug() << "Sent Alt+Tab";
+                m_l3TabActive = true;
+                keybd_event(VK_MENU, 0, 0, 0);
+                keybd_event(VK_TAB, 0, 0, 0);
+                keybd_event(VK_TAB, 0, KEYEVENTF_KEYUP, 0);
+                qDebug() << "Sent Alt+Tab (L3 layer)";
             }
             return;
         }
@@ -117,27 +128,8 @@ void KeyboardMapper::processButton(uint16_t button, bool pressed, uint16_t prevB
 
 void KeyboardMapper::processTrigger(float leftTrigger, float rightTrigger,
                                      float prevLeftTrigger, float prevRightTrigger) {
-    if (leftTrigger > 0.6f && !m_ltHeld) {
-        m_ltHeld = true;
-        m_altSent = false;
-        qDebug() << "LT pressed";
-    } else if (leftTrigger < 0.3f && m_ltHeld) {
-        m_ltHeld = false;
-        m_ltTabActive = false;
-        m_ltTabBlocked.clear();
-        m_lockedActions.clear();
-        if (m_altSent) {
-            INPUT input = {};
-            input.type = INPUT_KEYBOARD;
-            input.ki.wVk = VK_MENU;
-            input.ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(1, &input, sizeof(INPUT));
-            m_altSent = false;
-            qDebug() << "LT released, Alt UP";
-        } else {
-            qDebug() << "LT released (no Alt sent)";
-        }
-    }
+    Q_UNUSED(leftTrigger);
+    Q_UNUSED(prevLeftTrigger);
 
     if (rightTrigger > 0.6f && !m_rtHeld) {
         m_rtHeld = true;
@@ -161,20 +153,15 @@ void KeyboardMapper::processTrigger(float leftTrigger, float rightTrigger,
 }
 
 void KeyboardMapper::releaseModifiers() {
-    if (m_ltHeld) {
-        m_ltHeld = false;
-        m_ltTabActive = false;
-        m_ltTabBlocked.clear();
-        m_lockedActions.clear();
-        if (m_altSent) {
-            INPUT input = {};
-            input.type = INPUT_KEYBOARD;
-            input.ki.wVk = VK_MENU;
-            input.ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(1, &input, sizeof(INPUT));
-            m_altSent = false;
-            qDebug() << "Forced Alt UP on mode change";
+    if (m_l3Held) {
+        if (m_l3TabActive) {
+            keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
         }
+        m_l3Held = false;
+        m_l3TabActive = false;
+        m_l3TabBlocked.clear();
+        m_lockedActions.clear();
+        qDebug() << "Forced L3 release on mode change";
     }
     if (m_rtHeld) {
         m_rtHeld = false;
@@ -192,9 +179,9 @@ void KeyboardMapper::releaseModifiers() {
 }
 
 ButtonAction KeyboardMapper::lookupAction(const QString& btnName) {
-    if (m_ltHeld && m_modifierMapping.contains("LT")) {
-        const auto& ltMap = m_modifierMapping.value("LT");
-        if (ltMap.contains(btnName)) return ltMap.value(btnName);
+    if (m_l3Held && m_modifierMapping.contains("L3")) {
+        const auto& l3Map = m_modifierMapping.value("L3");
+        if (l3Map.contains(btnName)) return l3Map.value(btnName);
     }
     if (m_rtHeld && m_modifierMapping.contains("RT")) {
         const auto& rtMap = m_modifierMapping.value("RT");
@@ -303,17 +290,17 @@ QStringList KeyboardMapper::buildHelpLines() const {
         }
     }
     lines << "";
-    lines << "## LT层 (按住LT)";
-    if (m_modifierMapping.contains("LT")) {
-        const auto& ltMap = m_modifierMapping.value("LT");
-        for (auto it = ltMap.begin(); it != ltMap.end(); ++it) {
+    lines << "## L3层 (按住L3)";
+    if (m_modifierMapping.contains("L3")) {
+        const auto& l3Map = m_modifierMapping.value("L3");
+        for (auto it = l3Map.begin(); it != l3Map.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << QString("  LT+%1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
+                lines << QString("  L3+%1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
             }
         }
     }
-    lines << "  LT+View  →  切换模式";
-    lines << "  LT+R3    →  显示帮助";
+    lines << "  L3+View  →  切换模式";
+    lines << "  L3+R3    →  显示帮助";
     lines << "";
     lines << "## RT层 (按住RT)";
     if (m_modifierMapping.contains("RT")) {
@@ -330,6 +317,6 @@ QStringList KeyboardMapper::buildHelpLines() const {
     lines << "  右摇杆  →  滚动页面";
     lines << "";
     lines << "## 模式切换";
-    lines << "  LT+View(长按1秒)  →  切换模式";
+    lines << "  L3+View(长按1秒)  →  切换模式";
     return lines;
 }

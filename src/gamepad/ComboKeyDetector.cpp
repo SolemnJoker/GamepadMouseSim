@@ -14,10 +14,10 @@ void ComboKeyDetector::onGamepadState(int controllerIndex, const GamepadState& s
         return;
     }
 
-    bool ltPressed = state.leftTrigger > 0.6f;
+    bool l3Pressed = (state.buttons & XINPUT_GAMEPAD_LEFT_THUMB) != 0;
     bool viewPressed = (state.buttons & XINPUT_GAMEPAD_BACK) != 0;
 
-    if (ltPressed && viewPressed) {
+    if (l3Pressed && viewPressed) {
         if (!m_holding) {
             m_holding = true;
             m_holdTimer.start();

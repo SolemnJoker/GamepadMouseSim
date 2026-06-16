@@ -38,14 +38,13 @@ private:
 
     bool m_lbHeld = false;
     bool m_rbHeld = false;
-    bool m_ltHeld = false;
+    bool m_l3Held = false;
     bool m_rtHeld = false;
 
     QSet<uint16_t> m_pressedButtons;
-    QSet<uint16_t> m_ltTabBlocked;
-    bool m_ltTabActive = false;
+    QSet<uint16_t> m_l3TabBlocked;
+    bool m_l3TabActive = false;
 
-    bool m_altSent = false;
     bool m_ctrlSent = false;
     QMap<uint16_t, ButtonAction> m_lockedActions;
 };
