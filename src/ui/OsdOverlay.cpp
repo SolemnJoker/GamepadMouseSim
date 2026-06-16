@@ -39,7 +39,44 @@ void OsdOverlay::showModeChange(int controllerIndex, GamepadMode mode) {
 
 void OsdOverlay::showHelp(const QStringList& lines) {
     m_isHelpMode = true;
-    m_helpLines = lines;
+
+    const int refWidth = 1920;
+    QFont font("Microsoft YaHei", 25);
+    QFontMetrics fm(font);
+    int lineHeight = fm.height() + 8;
+    int margin = 40;
+    int availHeight = 1080 - margin * 2;
+    int linesPerColumn = qMax(1, availHeight / lineHeight);
+    int totalLines = lines.size();
+    int numColumns = qMax(1, (totalLines + linesPerColumn - 1) / linesPerColumn);
+    int colWidth = (refWidth - margin * 2) / numColumns;
+    int pixHeight = linesPerColumn * lineHeight + margin * 2;
+
+    m_helpPixmap = QPixmap(refWidth, pixHeight);
+    m_helpPixmap.fill(QColor(0, 0, 0, 200));
+    {
+        QPainter p(&m_helpPixmap);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setFont(font);
+        for (int col = 0; col < numColumns; ++col) {
+            int startLine = col * linesPerColumn;
+            int endLine = qMin(startLine + linesPerColumn, totalLines);
+            int x = margin + col * colWidth;
+            for (int i = startLine; i < endLine; ++i) {
+                int y = margin + (i - startLine) * lineHeight + fm.ascent();
+                QString line = lines[i];
+                QColor c = Qt::white;
+                if (i > 0 && lines[i - 1].isEmpty()) {
+                    c = QColor(255, 200, 100);
+                } else if (i == 0) {
+                    c = QColor(100, 200, 255);
+                }
+                p.setPen(c);
+                QString elided = fm.elidedText(line, Qt::ElideRight, colWidth - 20);
+                p.drawText(x, y, elided);
+            }
+        }
+    }
 
     QScreen* screen = QGuiApplication::primaryScreen();
     if (!screen) return;
@@ -100,47 +137,10 @@ void OsdOverlay::paintEvent(QPaintEvent* event) {
     painter.setPen(Qt::NoPen);
     painter.drawRoundedRect(rect(), 10, 10);
 
-    painter.setPen(Qt::white);
-
-    if (m_isHelpMode) {
-        QFont font("Microsoft YaHei", 25);
-        painter.setFont(font);
-        QFontMetrics fm(font);
-        int lineHeight = fm.height() + 8;
-        int margin = 30;
-        int availWidth = width() - margin * 2;
-        int availHeight = height() - margin * 2;
-        int linesPerColumn = qMax(1, availHeight / lineHeight);
-
-        int totalLines = m_helpLines.size();
-        int numColumns = qMax(1, (totalLines + linesPerColumn - 1) / linesPerColumn);
-
-        int colWidth = availWidth / numColumns;
-
-        for (int col = 0; col < numColumns; ++col) {
-            int startLine = col * linesPerColumn;
-            int endLine = qMin(startLine + linesPerColumn, totalLines);
-            int x = margin + col * colWidth;
-
-            for (int i = startLine; i < endLine; ++i) {
-                int row = i - startLine;
-                int y = margin + row * lineHeight + fm.ascent();
-
-                QString line = m_helpLines[i];
-                QColor c = Qt::white;
-                if (line.startsWith("##")) {
-                    c = QColor(255, 200, 100);
-                } else if (line.startsWith("#")) {
-                    c = QColor(100, 200, 255);
-                    line = line.mid(1);
-                }
-
-                painter.setPen(c);
-                QString elided = fm.elidedText(line, Qt::ElideRight, colWidth - 10);
-                painter.drawText(x, y, elided);
-            }
-        }
-    } else {
+    if (m_isHelpMode && !m_helpPixmap.isNull()) {
+        painter.drawPixmap(rect(), m_helpPixmap, m_helpPixmap.rect());
+    } else if (!m_isHelpMode) {
+        painter.setPen(Qt::white);
         painter.setFont(QFont("Segoe UI", 14, QFont::Bold));
         painter.drawText(rect(), Qt::AlignCenter, m_text);
     }

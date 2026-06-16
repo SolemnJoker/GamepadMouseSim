@@ -282,15 +282,15 @@ void KeyboardMapper::executeAction(ButtonAction action) {
 
 QStringList KeyboardMapper::buildHelpLines() const {
     QStringList lines;
-    lines << "#  手柄鼠标模拟器" << "";
-    lines << "## 直接映射";
+    lines << "  手柄鼠标模拟器" << "";
+    lines << "直接映射";
     for (auto it = m_directMapping.begin(); it != m_directMapping.end(); ++it) {
         if (it.value() != ButtonAction::None) {
             lines << QString("  %1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
         }
     }
     lines << "";
-    lines << "## L3层 (按住L3)";
+    lines << "L3层 (按住L3)";
     if (m_modifierMapping.contains("L3")) {
         const auto& l3Map = m_modifierMapping.value("L3");
         for (auto it = l3Map.begin(); it != l3Map.end(); ++it) {
@@ -302,7 +302,7 @@ QStringList KeyboardMapper::buildHelpLines() const {
     lines << "  L3+View  →  切换模式";
     lines << "  L3+R3    →  显示帮助";
     lines << "";
-    lines << "## RT层 (按住RT)";
+    lines << "RT层 (按住RT)";
     if (m_modifierMapping.contains("RT")) {
         const auto& rtMap = m_modifierMapping.value("RT");
         for (auto it = rtMap.begin(); it != rtMap.end(); ++it) {
@@ -312,11 +312,11 @@ QStringList KeyboardMapper::buildHelpLines() const {
         }
     }
     lines << "";
-    lines << "## 摇杆";
+    lines << "摇杆";
     lines << "  左摇杆  →  移动鼠标";
     lines << "  右摇杆  →  滚动页面";
     lines << "";
-    lines << "## 模式切换";
+    lines << "模式切换";
     lines << "  L3+View(长按1秒)  →  切换模式";
     return lines;
 }

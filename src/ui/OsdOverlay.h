@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QPropertyAnimation>
 #include <QTimer>
+#include <QPixmap>
 #include <QStringList>
 #include "core/Types.h"
 
@@ -24,8 +25,7 @@ private:
 
     bool m_isHelpMode = false;
     QString m_text;
-    QStringList m_helpLines;
+    QPixmap m_helpPixmap;
     QPropertyAnimation m_fadeAnimation;
     QTimer m_hideTimer;
-    int m_hideTimerId = 0;
 };
