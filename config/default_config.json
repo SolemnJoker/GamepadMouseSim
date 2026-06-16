@@ -26,7 +26,7 @@
       "DpadUp": "VolumeUp",
       "DpadDown": "VolumeDown",
       "DpadLeft": "VolumeMute",
-      "DpadRight": "Win+D",
+      "DpadRight": "None",
       "LB": "MouseLeftHold",
       "RB": "MouseRightHold",
       "LT": "None",
@@ -49,7 +49,7 @@
         "R3": "ShowHelp"
       },
       "RT": {
-        "DpadRight": "Ctrl+Tab",
+        "DpadRight": "Win+D",
         "DpadLeft": "Ctrl+Shift+Tab",
         "DpadUp": "PageUp",
         "DpadDown": "PageDown",
