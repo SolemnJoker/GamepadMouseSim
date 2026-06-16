@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QTextOption>
 #include <QDebug>
 
 OsdOverlay::OsdOverlay(QWidget* parent)
@@ -39,12 +40,34 @@ void OsdOverlay::showModeChange(int controllerIndex, GamepadMode mode) {
 
 void OsdOverlay::showHelp(const QString& text) {
     m_isHelpMode = true;
-    int lineCount = text.count('\n') + 1;
-    int lineHeight = 18;
-    int padding = 40;
-    int w = 420;
-    int h = qMin(lineCount * lineHeight + padding, 500);
-    showMessage(text, 5000, w, h);
+
+    QScreen* screen = QGuiApplication::primaryScreen();
+    if (!screen) {
+        showMessage(text, 5000);
+        return;
+    }
+    QRect sg = screen->availableGeometry();
+    int w = static_cast<int>(sg.width() * 0.85);
+    int h = static_cast<int>(sg.height() * 0.85);
+    int x = sg.left() + (sg.width() - w) / 2;
+    int y = sg.top() + (sg.height() - h) / 2;
+
+    m_text = text;
+    m_hideTimer.stop();
+    m_fadeAnimation.stop();
+
+    setFixedSize(w, h);
+    move(x, y);
+
+    setWindowOpacity(0.0);
+    show();
+    raise();
+    update();
+
+    m_fadeAnimation.setDirection(QPropertyAnimation::Forward);
+    m_fadeAnimation.start();
+
+    m_hideTimer.start(5000);
 }
 
 void OsdOverlay::showMessage(const QString& text, int durationMs, int width, int height) {
@@ -83,9 +106,11 @@ void OsdOverlay::paintEvent(QPaintEvent* event) {
 
     painter.setPen(Qt::white);
     if (m_isHelpMode) {
-        QFont font("Consolas", 10);
+        QFont font("Microsoft YaHei", 14);
         painter.setFont(font);
-        painter.drawText(rect().adjusted(15, 15, -15, -15), Qt::AlignLeft | Qt::AlignTop, m_text);
+        QTextOption opt;
+        opt.setWrapMode(QTextOption::WordWrap);
+        painter.drawText(rect().adjusted(25, 25, -25, -25), m_text, opt);
     } else {
         painter.setFont(QFont("Segoe UI", 14, QFont::Bold));
         painter.drawText(rect(), Qt::AlignCenter, m_text);

@@ -237,38 +237,44 @@ void KeyboardMapper::executeAction(ButtonAction action) {
 
 QString KeyboardMapper::buildHelpText() const {
     QStringList lines;
-    lines << "=== Gamepad Mouse Sim ===";
+    lines << "╔════════════════════════════════╗";
+    lines << "║     手柄鼠标模拟器 - 操作说明     ║";
+    lines << "╚════════════════════════════════╝";
     lines << "";
-    lines << "--- Direct Mapping ---";
+    lines << "━━━ 直接映射 ━━━";
     for (auto it = m_directMapping.begin(); it != m_directMapping.end(); ++it) {
         if (it.value() != ButtonAction::None) {
-            lines << QString("  %1 = %2").arg(it.key()).arg(actionToString(it.value()));
+            lines << QString("  %1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
         }
     }
     lines << "";
-    lines << "--- LT Layer (Hold LT) ---";
+    lines << "━━━ LT层（按住LT）━━━";
     if (m_modifierMapping.contains("LT")) {
         const auto& ltMap = m_modifierMapping.value("LT");
         for (auto it = ltMap.begin(); it != ltMap.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << QString("  LT+%1 = %2").arg(it.key()).arg(actionToString(it.value()));
+                lines << QString("  LT+%1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
             }
         }
     }
-    lines << "  LT+View = Switch Mode";
-    lines << "  LT+R3 = Show Help";
+    lines << "  LT+View  →  切换模式";
+    lines << "  LT+R3    →  显示帮助";
     lines << "";
-    lines << "--- RT Layer (Hold RT) ---";
+    lines << "━━━ RT层（按住RT）━━━";
     if (m_modifierMapping.contains("RT")) {
         const auto& rtMap = m_modifierMapping.value("RT");
         for (auto it = rtMap.begin(); it != rtMap.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << QString("  RT+%1 = %2").arg(it.key()).arg(actionToString(it.value()));
+                lines << QString("  RT+%1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
             }
         }
     }
     lines << "";
-    lines << "Left Stick = Move Mouse";
-    lines << "Right Stick = Scroll";
+    lines << "━━━ 摇杆 ━━━";
+    lines << "  左摇杆  →  移动鼠标";
+    lines << "  右摇杆  →  滚动页面";
+    lines << "";
+    lines << "━━━ 模式切换 ━━━";
+    lines << "  长按LT+View 1秒  →  鼠标模式 / 默认模式切换";
     return lines.join("\n");
 }
