@@ -58,6 +58,7 @@ void OsdOverlay::showHelp(const QStringList& lines) {
     int totalLines = lines.size();
     int numColumns = qMax(1, (totalLines + linesPerColumn - 1) / linesPerColumn);
     int colWidth = availWidth / numColumns;
+    int arrowX = 180;
 
     m_helpPixmap = QPixmap(w, h);
     m_helpPixmap.fill(QColor(0, 0, 0, 200));
@@ -79,8 +80,18 @@ void OsdOverlay::showHelp(const QStringList& lines) {
                 c = QColor(100, 200, 255);
             }
             p.setPen(c);
-            QString elided = fm.elidedText(line, Qt::ElideRight, colWidth - 20);
-            p.drawText(px, py, elided);
+
+            int sepIdx = line.indexOf("→");
+            if (sepIdx > 0) {
+                QString leftPart = line.left(sepIdx).trimmed();
+                QString rightPart = line.mid(sepIdx + 1).trimmed();
+                int ax = px + arrowX;
+                p.drawText(px, py, leftPart);
+                p.drawText(px + ax, py, "→");
+                p.drawText(px + ax + fm.horizontalAdvance("→  "), py, rightPart);
+            } else {
+                p.drawText(px, py, line);
+            }
         }
     }
     p.end();

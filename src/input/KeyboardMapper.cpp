@@ -299,7 +299,7 @@ QStringList KeyboardMapper::buildHelpLines() const {
     lines << "直接映射";
     for (auto it = m_directMapping.begin(); it != m_directMapping.end(); ++it) {
         if (it.value() != ButtonAction::None) {
-            lines << "  " + padRight(it.key(), 10) + "→  " + actionToChinese(it.value());
+            lines << padRight(it.key(), 10) + " → " + actionToChinese(it.value());
         }
     }
     lines << "";
@@ -308,28 +308,28 @@ QStringList KeyboardMapper::buildHelpLines() const {
         const auto& l3Map = m_modifierMapping.value("L3");
         for (auto it = l3Map.begin(); it != l3Map.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << "  " + padRight("L3+" + it.key(), 14) + "→  " + actionToChinese(it.value());
+                lines << padRight("L3+" + it.key(), 14) + " → " + actionToChinese(it.value());
             }
         }
     }
-    lines << "  " + padRight("L3+View", 14) + "→  切换模式";
-    lines << "  " + padRight("L3+R3", 14) + "→  显示帮助";
+    lines << padRight("L3+View", 14) + " → 切换模式";
+    lines << padRight("L3+R3", 14) + " → 显示帮助";
     lines << "";
     lines << "RT层 (按住RT)";
     if (m_modifierMapping.contains("RT")) {
         const auto& rtMap = m_modifierMapping.value("RT");
         for (auto it = rtMap.begin(); it != rtMap.end(); ++it) {
             if (it.value() != ButtonAction::None) {
-                lines << "  " + padRight("RT+" + it.key(), 14) + "→  " + actionToChinese(it.value());
+                lines << padRight("RT+" + it.key(), 14) + " → " + actionToChinese(it.value());
             }
         }
     }
     lines << "";
     lines << "摇杆";
-    lines << "  " + padRight("左摇杆", 10) + "→  移动鼠标";
-    lines << "  " + padRight("右摇杆", 10) + "→  滚动页面";
+    lines << padRight("左摇杆", 10) + " → 移动鼠标";
+    lines << padRight("右摇杆", 10) + " → 滚动页面";
     lines << "";
     lines << "模式切换";
-    lines << "  " + padRight("L3+View(长按1秒)", 20) + "→  切换模式";
+    lines << padRight("L3+View(长按1秒)", 20) + " → 切换模式";
     return lines;
 }
