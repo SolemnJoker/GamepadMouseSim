@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QPropertyAnimation>
 #include <QTimer>
+#include <QStringList>
 #include "core/Types.h"
 
 class OsdOverlay : public QWidget {
@@ -13,15 +14,17 @@ public:
 
 public slots:
     void showModeChange(int controllerIndex, GamepadMode mode);
-    void showHelp(const QString& text);
+    void showHelp(const QStringList& lines);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
     void showMessage(const QString& text, int durationMs = 2000, int width = 300, int height = 60);
+
     bool m_isHelpMode = false;
     QString m_text;
+    QStringList m_helpLines;
     QPropertyAnimation m_fadeAnimation;
     QTimer m_hideTimer;
     int m_hideTimerId = 0;

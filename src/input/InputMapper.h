@@ -12,7 +12,7 @@ class InputMapper : public QObject {
 public:
     explicit InputMapper(Config* config, int controllerIndex, QObject* parent = nullptr);
 
-    QString helpText() const { return m_keyboardMapper.buildHelpText(); }
+    QStringList helpLines() const { return m_keyboardMapper.buildHelpLines(); }
 
 public slots:
     void onGamepadStateChanged(int controllerIndex, const GamepadState& state);

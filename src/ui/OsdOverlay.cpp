@@ -2,7 +2,6 @@
 #include <QPainter>
 #include <QScreen>
 #include <QGuiApplication>
-#include <QTextOption>
 #include <QDebug>
 
 OsdOverlay::OsdOverlay(QWidget* parent)
@@ -38,21 +37,18 @@ void OsdOverlay::showModeChange(int controllerIndex, GamepadMode mode) {
     showMessage(text);
 }
 
-void OsdOverlay::showHelp(const QString& text) {
+void OsdOverlay::showHelp(const QStringList& lines) {
     m_isHelpMode = true;
+    m_helpLines = lines;
 
     QScreen* screen = QGuiApplication::primaryScreen();
-    if (!screen) {
-        showMessage(text, 5000);
-        return;
-    }
+    if (!screen) return;
     QRect sg = screen->availableGeometry();
     int w = static_cast<int>(sg.width() * 0.85);
     int h = static_cast<int>(sg.height() * 0.85);
     int x = sg.left() + (sg.width() - w) / 2;
     int y = sg.top() + (sg.height() - h) / 2;
 
-    m_text = text;
     m_hideTimer.stop();
     m_fadeAnimation.stop();
 
@@ -105,12 +101,45 @@ void OsdOverlay::paintEvent(QPaintEvent* event) {
     painter.drawRoundedRect(rect(), 10, 10);
 
     painter.setPen(Qt::white);
+
     if (m_isHelpMode) {
-        QFont font("Microsoft YaHei", 14);
+        QFont font("Microsoft YaHei", 18);
         painter.setFont(font);
-        QTextOption opt;
-        opt.setWrapMode(QTextOption::WordWrap);
-        painter.drawText(rect().adjusted(25, 25, -25, -25), m_text, opt);
+        QFontMetrics fm(font);
+        int lineHeight = fm.height() + 8;
+        int margin = 30;
+        int availWidth = width() - margin * 2;
+        int availHeight = height() - margin * 2;
+        int linesPerColumn = qMax(1, availHeight / lineHeight);
+
+        int totalLines = m_helpLines.size();
+        int numColumns = qMax(1, (totalLines + linesPerColumn - 1) / linesPerColumn);
+
+        int colWidth = availWidth / numColumns;
+
+        for (int col = 0; col < numColumns; ++col) {
+            int startLine = col * linesPerColumn;
+            int endLine = qMin(startLine + linesPerColumn, totalLines);
+            int x = margin + col * colWidth;
+
+            for (int i = startLine; i < endLine; ++i) {
+                int row = i - startLine;
+                int y = margin + row * lineHeight + fm.ascent();
+
+                QString line = m_helpLines[i];
+                QColor c = Qt::white;
+                if (line.startsWith("##")) {
+                    c = QColor(255, 200, 100);
+                } else if (line.startsWith("#")) {
+                    c = QColor(100, 200, 255);
+                    line = line.mid(1);
+                }
+
+                painter.setPen(c);
+                QString elided = fm.elidedText(line, Qt::ElideRight, colWidth - 10);
+                painter.drawText(x, y, elided);
+            }
+        }
     } else {
         painter.setFont(QFont("Segoe UI", 14, QFont::Bold));
         painter.drawText(rect(), Qt::AlignCenter, m_text);

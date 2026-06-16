@@ -16,7 +16,7 @@ public:
     void processTrigger(float leftTrigger, float rightTrigger,
                         float prevLeftTrigger, float prevRightTrigger);
 
-    QString buildHelpText() const;
+    QStringList buildHelpLines() const;
 
 public slots:
     void onConfigChanged();

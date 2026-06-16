@@ -228,7 +228,6 @@ void KeyboardMapper::executeAction(ButtonAction action) {
     case ButtonAction::VolumeDown: SendInputHelper::mediaKey(VK_VOLUME_DOWN); break;
     case ButtonAction::VolumeMute: SendInputHelper::mediaKey(VK_VOLUME_MUTE); break;
     case ButtonAction::ShowHelp: {
-        QString helpText = buildHelpText();
         emit showHelpRequested();
         break;
     }
@@ -237,20 +236,17 @@ void KeyboardMapper::executeAction(ButtonAction action) {
     }
 }
 
-QString KeyboardMapper::buildHelpText() const {
+QStringList KeyboardMapper::buildHelpLines() const {
     QStringList lines;
-    lines << "╔════════════════════════════════╗";
-    lines << "║     手柄鼠标模拟器 - 操作说明     ║";
-    lines << "╚════════════════════════════════╝";
-    lines << "";
-    lines << "━━━ 直接映射 ━━━";
+    lines << "#  手柄鼠标模拟器" << "";
+    lines << "## 直接映射";
     for (auto it = m_directMapping.begin(); it != m_directMapping.end(); ++it) {
         if (it.value() != ButtonAction::None) {
             lines << QString("  %1  →  %2").arg(it.key(), -10).arg(actionToString(it.value()));
         }
     }
     lines << "";
-    lines << "━━━ LT层（按住LT）━━━";
+    lines << "## LT层 (按住LT)";
     if (m_modifierMapping.contains("LT")) {
         const auto& ltMap = m_modifierMapping.value("LT");
         for (auto it = ltMap.begin(); it != ltMap.end(); ++it) {
@@ -262,7 +258,7 @@ QString KeyboardMapper::buildHelpText() const {
     lines << "  LT+View  →  切换模式";
     lines << "  LT+R3    →  显示帮助";
     lines << "";
-    lines << "━━━ RT层（按住RT）━━━";
+    lines << "## RT层 (按住RT)";
     if (m_modifierMapping.contains("RT")) {
         const auto& rtMap = m_modifierMapping.value("RT");
         for (auto it = rtMap.begin(); it != rtMap.end(); ++it) {
@@ -272,11 +268,11 @@ QString KeyboardMapper::buildHelpText() const {
         }
     }
     lines << "";
-    lines << "━━━ 摇杆 ━━━";
+    lines << "## 摇杆";
     lines << "  左摇杆  →  移动鼠标";
     lines << "  右摇杆  →  滚动页面";
     lines << "";
-    lines << "━━━ 模式切换 ━━━";
-    lines << "  长按LT+View 1秒  →  鼠标模式 / 默认模式切换";
-    return lines.join("\n");
+    lines << "## 模式切换";
+    lines << "  LT+View(长按1秒)  →  切换模式";
+    return lines;
 }

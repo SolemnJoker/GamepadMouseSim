@@ -73,7 +73,7 @@ bool Application::initialize() {
     for (int i = 0; i < kMaxGamepads; ++i) {
         connect(m_inputMappers[i], &InputMapper::showHelpRequested,
                 this, [this, i]() {
-                    m_osdOverlay.showHelp(m_inputMappers[i]->helpText());
+                    m_osdOverlay.showHelp(m_inputMappers[i]->helpLines());
                 });
     }
 
