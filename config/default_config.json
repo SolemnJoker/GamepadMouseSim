@@ -23,10 +23,10 @@
       "B": "MouseRightClick",
       "X": "MouseMiddleClick",
       "Y": "Enter",
-      "DpadUp": "VolumeUp",
-      "DpadDown": "VolumeDown",
-      "DpadLeft": "VolumeMute",
-      "DpadRight": "None",
+      "DpadUp": "ArrowUp",
+      "DpadDown": "ArrowDown",
+      "DpadLeft": "ArrowLeft",
+      "DpadRight": "ArrowRight",
       "LB": "MouseLeftHold",
       "RB": "MouseRightHold",
       "LT": "None",
@@ -37,19 +37,20 @@
       "Menu": "Win"
     },
     "modifier_mapping": {
-      "L3": {
+      "LT": {
         "X": "Alt+Tab",
         "LB": "ShiftTab",
         "RB": "Tab",
         "A": "Enter",
         "B": "Escape",
         "Y": "Alt+F4",
-        "DpadUp": "ArrowUp",
-        "DpadDown": "ArrowDown",
+        "DpadUp": "VolumeUp",
+        "DpadDown": "VolumeDown",
+        "DpadLeft": "VolumeMute",
         "R3": "ShowHelp"
       },
       "RT": {
-        "DpadRight": "Win+D",
+        "DpadRight": "None",
         "DpadLeft": "Ctrl+Shift+Tab",
         "DpadUp": "PageUp",
         "DpadDown": "PageDown",
@@ -58,14 +59,30 @@
         "X": "Ctrl+X",
         "Y": "Ctrl+V",
         "LB": "None",
+        "L3": "Win+D",
         "RB": "Ctrl+S",
-        "R3": "Ctrl+Shift+Z"
+        "R3": "Ctrl+Z"
       }
     }
   },
   "osd": {
     "enabled": true,
     "duration_seconds": 2
+  },
+  "auto_switch": {
+    "enabled": false,
+    "poll_interval_seconds": 10,
+    "detection": {
+      "process_list_enabled": true,
+      "process_names": [],
+      "fullscreen_enabled": false,
+      "cpu_enabled": false,
+      "cpu_threshold": 50,
+      "cpu_sustained_seconds": 30,
+      "gpu_enabled": false,
+      "gpu_threshold": 50,
+      "gpu_sustained_seconds": 30
+    }
   },
   "autostart": false
 }

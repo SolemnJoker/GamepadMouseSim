@@ -1,4 +1,6 @@
 #include "Application.h"
+#include "ui/SettingsDialog.h"
+#include "core/AutoStart.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QDebug>
@@ -15,6 +17,7 @@ Application::Application(QObject* parent)
         m_inputMappers[i] = new InputMapper(&m_config, i, this);
         m_modeManagers[i] = new ModeManager(&m_config, i, this);
     }
+    m_autoController = new AutoModeController(&m_config, m_modeManagers, this);
 }
 
 Application::~Application() {
@@ -72,8 +75,8 @@ bool Application::initialize() {
 
     for (int i = 0; i < kMaxGamepads; ++i) {
         connect(m_inputMappers[i], &InputMapper::showHelpRequested,
-                this, [this, i]() {
-                    m_osdOverlay.showHelp(m_inputMappers[i]->helpLines());
+                this, [this]() {
+                    m_osdOverlay.showHelp();
                 });
     }
 
@@ -83,6 +86,8 @@ bool Application::initialize() {
                     m_modeManagers[i]->manualSwitch();
                 }
             });
+    connect(&m_systemTray, &SystemTray::settingsRequested,
+            this, [this]() { showSettings(); });
     connect(&m_systemTray, &SystemTray::lockModeRequested,
             this, [this]() {
                 for (int i = 0; i < kMaxGamepads; ++i) {
@@ -103,13 +108,40 @@ bool Application::initialize() {
             m_modeManagers[i]->onConfigChanged();
             m_inputMappers[i]->onConfigChanged();
         }
+        m_autoController->onConfigChanged();
     });
+
+    // Apply the configured boot autostart state on every launch.
+    if (m_config.value("autostart", false).toBool()) {
+        if (!AutoStart::isEnabled()) {
+            AutoStart::setEnabled(true);
+        }
+    } else {
+        if (AutoStart::isEnabled()) {
+            AutoStart::setEnabled(false);
+        }
+    }
 
     m_gamepadPoller.start();
     for (int i = 0; i < kMaxGamepads; ++i) {
         m_modeManagers[i]->start();
     }
+    m_autoController->start();
     m_systemTray.show();
 
     return true;
+}
+
+void Application::showSettings() {
+    if (m_settingsDialog) {
+        m_settingsDialog->raise();
+        m_settingsDialog->activateWindow();
+        return;
+    }
+    m_settingsDialog = new SettingsDialog(&m_config, nullptr);
+    m_settingsDialog->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_settingsDialog, &QDialog::finished, this, [this]() {
+        m_settingsDialog = nullptr;
+    });
+    m_settingsDialog->show();
 }

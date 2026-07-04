@@ -18,6 +18,8 @@ public:
 
     QVariant value(const QString& key, const QVariant& defaultValue = QVariant()) const;
     void setValue(const QString& key, const QVariant& value);
+    void beginBatch();
+    void endBatch();
 
 signals:
     void configChanged();
@@ -33,4 +35,5 @@ private:
     QJsonObject m_data;
     QFileSystemWatcher m_watcher;
     QTimer m_debounceTimer;
+    int m_batchDepth = 0;
 };

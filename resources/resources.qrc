@@ -2,5 +2,8 @@
 <RCC version="1.0">
 <qresource prefix="/">
     <file>../config/default_config.json</file>
+    <file>icons/mouse.svg</file>
+    <file>icons/gamepad.svg</file>
+    <file>icons/help.png</file>
 </qresource>
 </RCC>

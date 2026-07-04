@@ -7,7 +7,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+set(Qt6_DIR "C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6")
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
 
 set(SOURCES
     src/main.cpp
@@ -16,6 +18,10 @@ set(SOURCES
     src/core/Types.cpp
     src/core/ModeManager.cpp
     src/core/ProcessDetector.cpp
+    src/core/AutoStart.cpp
+    src/core/SysUsage.cpp
+    src/core/GameDetector.cpp
+    src/core/AutoModeController.cpp
     src/gamepad/GamepadPoller.cpp
     src/gamepad/ComboKeyDetector.cpp
     src/input/InputMapper.cpp
@@ -23,6 +29,7 @@ set(SOURCES
     src/input/KeyboardMapper.cpp
     src/ui/SystemTray.cpp
     src/ui/OsdOverlay.cpp
+    src/ui/SettingsDialog.cpp
     src/win/XInputWrapper.cpp
     src/win/SendInputHelper.cpp
 )
@@ -32,6 +39,10 @@ set(HEADERS
     src/core/Config.h
     src/core/ModeManager.h
     src/core/ProcessDetector.h
+    src/core/AutoStart.h
+    src/core/SysUsage.h
+    src/core/GameDetector.h
+    src/core/AutoModeController.h
     src/core/Types.h
     src/gamepad/GamepadPoller.h
     src/gamepad/ComboKeyDetector.h
@@ -40,6 +51,7 @@ set(HEADERS
     src/input/KeyboardMapper.h
     src/ui/SystemTray.h
     src/ui/OsdOverlay.h
+    src/ui/SettingsDialog.h
     src/win/XInputWrapper.h
     src/win/SendInputHelper.h
 )
@@ -48,20 +60,32 @@ set(RESOURCES
     resources/resources.qrc
 )
 
+# Pre-generate help screen image from Python script
+set(HELP_PNG "${CMAKE_SOURCE_DIR}/resources/icons/help.png")
+add_custom_command(
+    OUTPUT "${HELP_PNG}"
+    COMMAND python "${CMAKE_SOURCE_DIR}/tools/generate_help_png.py"
+    DEPENDS "${CMAKE_SOURCE_DIR}/tools/generate_help_png.py"
+    COMMENT "Generating help screen image"
+)
+add_custom_target(generate_help_png DEPENDS "${HELP_PNG}")
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${RESOURCES})
+add_dependencies(${PROJECT_NAME} generate_help_png)
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
-    xinput1_4
+    Qt6::Svg
+    xinput
+    oleaut32 imm32 opengl32 version winmm
+    ws2_32 uuid netapi32 userenv dwmapi
+    dxgi
 )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        WIN32_EXECUTABLE TRUE
-    )
-endif()
+# 不设 WIN32_EXECUTABLE，保留控制台窗口避免 Smart App Control 拦截
+
 
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin

@@ -35,8 +35,8 @@ void MouseMapper::processLeftStick(float x, float y) {
         norm = norm * norm;
     }
 
-    float dx = nx * norm * m_sensX * 10.0f;
-    float dy = -ny * norm * m_sensY * 10.0f;
+    float dx = nx * norm * m_sensX * 20.0f;
+    float dy = -ny * norm * m_sensY * 20.0f;
 
     m_xAccum += dx;
     m_yAccum += dy;

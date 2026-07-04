@@ -17,8 +17,6 @@ public:
                         float prevLeftTrigger, float prevRightTrigger);
     void releaseModifiers();
 
-    QStringList buildHelpLines() const;
-
 public slots:
     void onConfigChanged();
 

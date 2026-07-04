@@ -4,7 +4,6 @@
 #include <QPropertyAnimation>
 #include <QTimer>
 #include <QPixmap>
-#include <QStringList>
 #include "core/Types.h"
 
 class OsdOverlay : public QWidget {
@@ -15,7 +14,7 @@ public:
 
 public slots:
     void showModeChange(int controllerIndex, GamepadMode mode);
-    void showHelp(const QStringList& lines);
+    void showHelp();
 
 protected:
     void paintEvent(QPaintEvent* event) override;

@@ -27,8 +27,24 @@ void ModeManager::manualSwitch() {
     qDebug() << "Pad" << m_controllerIndex << "manual switch from"
              << (m_mode == GamepadMode::Mouse ? "Mouse" : "Default")
              << "to" << (newMode == GamepadMode::Mouse ? "Mouse" : "Default");
+    // A manual switch clears the auto-switch origin flag, so the user stays in
+    // control of the resulting mode.
+    m_autoSwitched = false;
     setMode(newMode);
     m_lockoutTimer.start(m_lockoutMs);
+}
+
+void ModeManager::autoSwitchToDefault(const QString& reason) {
+    if (m_mode == GamepadMode::Default) {
+        // Already in default mode; nothing to do.
+        return;
+    }
+    qDebug() << "Pad" << m_controllerIndex << "auto switch Mouse -> Default"
+             << (reason.isEmpty() ? QString() : ("(" + reason + ")"));
+    m_autoSwitched = true;
+    setMode(GamepadMode::Default);
+    // No lockout: auto-switch is a deliberate config-driven action, and the
+    // user can still manually switch back afterwards.
 }
 
 void ModeManager::toggleLock() {
@@ -57,6 +73,6 @@ void ModeManager::setMode(GamepadMode mode) {
 }
 
 void ModeManager::loadConfig() {
-    m_lockoutMs = m_config->value("monitoring.manual_switch_lockout_seconds", 30).toInt() * 1000;
+    m_lockoutMs = m_config->value("monitoring.manual_switch_lockout_seconds", 3).toInt() * 1000;
     qDebug() << "Pad" << m_controllerIndex << "config loaded - lockout:" << m_lockoutMs << "ms";
 }

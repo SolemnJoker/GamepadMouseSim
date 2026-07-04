@@ -1,6 +1,9 @@
 #include "SystemTray.h"
 #include <QApplication>
 #include <QPainter>
+#include <QIcon>
+#include <QSvgRenderer>
+#include <QPainterPath>
 
 SystemTray::SystemTray(QObject* parent)
     : QObject(parent)
@@ -8,29 +11,34 @@ SystemTray::SystemTray(QObject* parent)
     std::fill(m_padModes.begin(), m_padModes.end(), GamepadMode::Mouse);
     std::fill(m_padConnected.begin(), m_padConnected.end(), false);
 
-    m_statusAction = m_menu.addAction("Mode: Mouse");
+    m_statusAction = m_menu.addAction("模式: 鼠标");
     m_statusAction->setEnabled(false);
     m_menu.addSeparator();
 
-    m_switchAction = m_menu.addAction("Switch Mode");
+    m_settingsAction = m_menu.addAction(QStringLiteral("设置..."));
+    connect(m_settingsAction, &QAction::triggered, this, &SystemTray::settingsRequested);
+
+    m_switchAction = m_menu.addAction("切换模式");
     connect(m_switchAction, &QAction::triggered, this, &SystemTray::switchModeRequested);
 
-    m_lockAction = m_menu.addAction("Lock Mode");
+    m_lockAction = m_menu.addAction("锁定模式");
     m_lockAction->setCheckable(true);
     connect(m_lockAction, &QAction::triggered, this, &SystemTray::lockModeRequested);
 
-    m_pauseAction = m_menu.addAction("Pause Passthrough");
+    m_pauseAction = m_menu.addAction("暂停映射");
     m_pauseAction->setCheckable(true);
     connect(m_pauseAction, &QAction::triggered, this, &SystemTray::pauseRequested);
 
     m_menu.addSeparator();
 
-    QAction* exitAction = m_menu.addAction("Exit");
+    QAction* exitAction = m_menu.addAction("退出");
     connect(exitAction, &QAction::triggered, this, &SystemTray::exitRequested);
 
     m_trayIcon.setContextMenu(&m_menu);
     connect(&m_trayIcon, &QSystemTrayIcon::activated, this, &SystemTray::onActivated);
 
+    m_iconMouse = renderSvg(":/icons/mouse.svg", 32);
+    m_iconGamepad = renderSvg(":/icons/gamepad.svg", 32);
     updateIcon(GamepadMode::Mouse);
 }
 
@@ -81,28 +89,17 @@ void SystemTray::updateTooltip() {
 }
 
 void SystemTray::updateIcon(GamepadMode mode) {
-    QIcon icon;
-    if (mode == GamepadMode::Mouse) {
-        QPixmap pixmap(16, 16);
-        pixmap.fill(Qt::transparent);
-        QPainter painter(&pixmap);
-        painter.setPen(Qt::white);
-        painter.setBrush(Qt::white);
-        painter.drawEllipse(6, 2, 4, 6);
-        painter.drawLine(8, 8, 8, 14);
-        painter.drawLine(8, 14, 5, 12);
-        painter.drawLine(8, 14, 11, 12);
-        icon = QIcon(pixmap);
-    } else {
-        QPixmap pixmap(16, 16);
-        pixmap.fill(Qt::transparent);
-        QPainter painter(&pixmap);
-        painter.setPen(Qt::white);
-        painter.setBrush(Qt::white);
-        painter.drawRoundedRect(2, 4, 12, 8, 2, 2);
-        painter.drawEllipse(5, 6, 2, 2);
-        painter.drawEllipse(9, 6, 2, 2);
-        icon = QIcon(pixmap);
-    }
-    m_trayIcon.setIcon(icon);
+    m_trayIcon.setIcon(mode == GamepadMode::Mouse ? m_iconMouse : m_iconGamepad);
+}
+
+QIcon SystemTray::renderSvg(const QString& path, int size) {
+    QSvgRenderer renderer(path);
+    if (!renderer.isValid()) return QIcon(path);
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    renderer.render(&painter);
+    painter.end();
+    return QIcon(pixmap);
 }

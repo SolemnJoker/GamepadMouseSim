@@ -112,6 +112,7 @@
 | 菜单项 | 功能 |
 |--------|------|
 | 状态栏 | 显示各手柄模式（如 `P1:M  P2:D`） |
+| 设置... | 打开可视化配置界面 |
 | Switch Mode | 所有手柄切换鼠标/默认模式 |
 | Lock Mode | 锁定当前模式（禁止切换） |
 | Pause Passthrough | 暂停手柄映射 |
@@ -125,7 +126,12 @@
 
 配置文件位于程序同目录下的 `config.json`。
 
-首次运行自动生成默认配置文件。你可以用记事本打开编辑：
+> 💡 **推荐：使用可视化配置界面**
+> 右键托盘图标 → **设置...** 即可打开配置界面，无需手动编辑 JSON。
+> 界面包含四个标签页：**常规、摇杆灵敏度、按键映射、自动切换**。
+> 点击"确定"后，程序会自动保存并立即生效（无需重启）。
+
+首次运行自动生成默认配置文件。配置结构如下（仅供参考，建议通过 GUI 修改）：
 
 ```json
 {
@@ -133,7 +139,7 @@
     "manual_switch_lockout_seconds": 3
   },
   "combo_key": {
-    "buttons": ["LT", "View"],
+    "buttons": ["L3", "View"],
     "hold_duration_ms": 1000
   },
   "mouse_mode": {
@@ -148,62 +154,36 @@
       "scroll_speed_horizontal": 1.0,
       "deadzone": 0.15
     },
-    "button_mapping": {
-      "A": "MouseLeftClick",
-      "B": "MouseRightClick",
-      "X": "MouseMiddleClick",
-      "Y": "Enter",
-      "DpadUp": "VolumeUp",
-      "DpadDown": "VolumeDown",
-      "DpadLeft": "VolumeMute",
-      "DpadRight": "None",
-      "LB": "MouseLeftHold",
-      "RB": "MouseRightHold",
-      "LT": "None",
-      "RT": "None",
-      "L3": "Enter",
-      "R3": "Escape",
-      "View": "Tab",
-      "Menu": "Win"
-    },
+    "button_mapping": { "...": "直接按键映射" },
     "modifier_mapping": {
-      "LT": {
-        "X": "Alt+Tab",
-        "LB": "ShiftTab",
-        "RB": "Tab",
-        "A": "Enter",
-        "B": "Escape",
-        "Y": "Alt+F4",
-        "DpadUp": "ArrowUp",
-        "DpadDown": "ArrowDown",
-        "L3": "Ctrl+V",
-        "R3": "ShowHelp"
-      },
-      "RT": {
-        "DpadRight": "Ctrl+Tab",
-        "DpadLeft": "Ctrl+Shift+Tab",
-        "DpadUp": "PageUp",
-        "DpadDown": "PageDown",
-        "A": "Ctrl+A",
-        "B": "Ctrl+C",
-        "X": "Ctrl+X",
-        "Y": "Ctrl+V",
-        "LB": "None",
-        "RB": "Ctrl+S",
-        "L3": "Ctrl+Z",
-        "R3": "Ctrl+Shift+Z"
-      }
+      "L3": { "...": "按住 L3 时的映射" },
+      "RT": { "...": "按住 RT 时的映射" }
     }
   },
   "osd": {
     "enabled": true,
     "duration_seconds": 2
   },
+  "auto_switch": {
+    "enabled": false,
+    "poll_interval_seconds": 10,
+    "detection": {
+      "process_list_enabled": true,
+      "process_names": [],
+      "fullscreen_enabled": false,
+      "cpu_enabled": false,
+      "cpu_threshold": 50,
+      "cpu_sustained_seconds": 30,
+      "gpu_enabled": false,
+      "gpu_threshold": 50,
+      "gpu_sustained_seconds": 30
+    }
+  },
   "autostart": false
 }
 ```
 
-**热加载**：修改配置后保存，程序自动生效，无需重启。
+**热加载**：无论是通过 GUI 还是手动编辑配置文件，保存后程序自动生效，无需重启。
 
 ### 常用配置调整
 
@@ -214,6 +194,32 @@
 | deadzone | 摇杆死区(越小越灵敏) | 0.10-0.20 |
 | acceleration | 是否启用鼠标加速 | true/false |
 | hold_duration_ms | 切换模式长按时间 | 500-2000ms |
+
+---
+
+## 自动切换模式
+
+程序可在检测到**正在玩游戏**时自动从鼠标模式切换到默认模式，让手柄恢复游戏控制。
+
+### 切换规则
+
+- **开机时默认为鼠标模式**。
+- 若手柄当前是**默认模式**，自动切换**不会**改变它（需手动切回鼠标模式）。
+- 若手柄当前是**鼠标模式**，检测到玩游戏时会自动切换到默认模式。
+- 切换到默认模式后，离开游戏**不会**自动切回鼠标模式，需手动切换。
+
+### 检测方式（任一命中即触发）
+
+在"设置 → 自动切换"标签页可配置，四种检测方式相互独立，任一命中即视为在玩游戏：
+
+| 检测方式 | 说明 | 响应速度 |
+|---------|------|---------|
+| **游戏进程** | 配置一组游戏 `.exe` 名称，任一在运行即触发 | 即时 |
+| **全屏窗口** | 前台窗口占满整个屏幕时触发（排除桌面/任务栏） | 即时 |
+| **CPU 占用** | 整机 CPU 占用持续高于阈值 N 秒后触发 | 延迟（防瞬时峰值） |
+| **GPU 占用** | GPU 占用持续高于阈值 N 秒后触发（近似值） | 延迟（防瞬时峰值） |
+
+> ⚠️ **GPU 占用说明**：Windows 无统一的 GPU 占用公共 API，本程序通过 D3DKMT 节点统计近似计算，结果依赖驱动支持，不同硬件可能存在偏差或不可用。建议以**游戏进程**检测为主。
 
 ---
 
@@ -235,7 +241,13 @@ A: 按住LT + 按R3，帮助屏幕在任何模式下都可以显示。
 A: 托盘菜单状态栏显示 `P1:M  P2:D`，OSD通知会标明 `Pad1: Mouse`。
 
 **Q: 如何关闭程序自启动？**
-A: 编辑config.json，将`autostart`设为`false`。
+A: 右键托盘图标 → 设置 → 取消勾选"开机自动启动" → 确定。或编辑config.json，将`autostart`设为`false`。
+
+**Q: 为什么自动切换到默认模式后不切回鼠标模式？**
+A: 按照设计，自动切换遵循"默认模式不自动改变"的原则。检测到玩游戏时从鼠标模式切到默认模式，但离开游戏后需手动切换回鼠标模式（长按组合键）。这样避免在游戏中误判导致模式反复跳变。
+
+**Q: GPU 占用检测不准或无效？**
+A: Windows 没有 GPU 占用的统一公共接口，程序通过 D3DKMT 近似计算，依赖驱动支持。建议改用"游戏进程检测"——在设置里添加游戏的可执行文件名（如 `eldenring.exe`），命中即触发，最可靠。
 
 **Q: 如何查看调试日志？**
 A: 运行目录下的`debug.log`文件记录了程序运行日志。

@@ -12,8 +12,6 @@ class InputMapper : public QObject {
 public:
     explicit InputMapper(Config* config, int controllerIndex, QObject* parent = nullptr);
 
-    QStringList helpLines() const { return m_keyboardMapper.buildHelpLines(); }
-
 public slots:
     void onGamepadStateChanged(int controllerIndex, const GamepadState& state);
     void onModeChanged(GamepadMode mode);

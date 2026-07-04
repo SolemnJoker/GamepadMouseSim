@@ -22,6 +22,7 @@ signals:
     void lockModeRequested();
     void pauseRequested();
     void exitRequested();
+    void settingsRequested();
 
 private slots:
     void onActivated(QSystemTrayIcon::ActivationReason reason);
@@ -29,6 +30,7 @@ private slots:
 private:
     void updateIcon(GamepadMode mode);
     void updateTooltip();
+    static QIcon renderSvg(const QString& path, int size);
 
     QSystemTrayIcon m_trayIcon;
     QMenu m_menu;
@@ -36,6 +38,9 @@ private:
     QAction* m_switchAction;
     QAction* m_lockAction;
     QAction* m_pauseAction;
+    QAction* m_settingsAction;
     std::array<GamepadMode, kMaxGamepads> m_padModes;
     std::array<bool, kMaxGamepads> m_padConnected = {};
+    QIcon m_iconMouse;
+    QIcon m_iconGamepad;
 };

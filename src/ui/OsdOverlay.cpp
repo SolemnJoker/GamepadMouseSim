@@ -16,6 +16,9 @@ OsdOverlay::OsdOverlay(QWidget* parent)
     m_fadeAnimation.setStartValue(0.0);
     m_fadeAnimation.setEndValue(1.0);
 
+    // Pre-load the help image from Qt resources
+    m_helpPixmap.load(":/icons/help.png");
+
     connect(&m_hideTimer, &QTimer::timeout, this, [this]() {
         m_fadeAnimation.stop();
         m_fadeAnimation.setDirection(QPropertyAnimation::Backward);
@@ -37,64 +40,29 @@ void OsdOverlay::showModeChange(int controllerIndex, GamepadMode mode) {
     showMessage(text);
 }
 
-void OsdOverlay::showHelp(const QStringList& lines) {
+void OsdOverlay::showHelp() {
     m_isHelpMode = true;
+
+    if (m_helpPixmap.isNull()) {
+        qWarning() << "Help image not available";
+        return;
+    }
 
     QScreen* screen = QGuiApplication::primaryScreen();
     if (!screen) return;
     QRect sg = screen->availableGeometry();
-    int w = static_cast<int>(sg.width() * 0.85);
-    int h = static_cast<int>(sg.height() * 0.85);
+
+    // Scale the 1920x1080 help image to fit 85% of screen, preserving aspect ratio
+    qreal maxW = sg.width() * 0.85;
+    qreal maxH = sg.height() * 0.85;
+    qreal scaleW = maxW / m_helpPixmap.width();
+    qreal scaleH = maxH / m_helpPixmap.height();
+    qreal scale = qMin(scaleW, scaleH);
+
+    int w = static_cast<int>(m_helpPixmap.width() * scale);
+    int h = static_cast<int>(m_helpPixmap.height() * scale);
     int x = sg.left() + (sg.width() - w) / 2;
     int y = sg.top() + (sg.height() - h) / 2;
-
-    QFont font("Microsoft YaHei", 25);
-    QFontMetrics fm(font);
-    int lineHeight = fm.height() + 8;
-    int margin = 40;
-    int availWidth = w - margin * 2;
-    int availHeight = h - margin * 2;
-    int linesPerColumn = qMax(1, availHeight / lineHeight);
-    int totalLines = lines.size();
-    int numColumns = qMax(1, (totalLines + linesPerColumn - 1) / linesPerColumn);
-    int colWidth = availWidth / numColumns;
-    int arrowX = 180;
-
-    m_helpPixmap = QPixmap(w, h);
-    m_helpPixmap.fill(QColor(0, 0, 0, 200));
-    QPainter p(&m_helpPixmap);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setRenderHint(QPainter::TextAntialiasing);
-    p.setFont(font);
-    for (int col = 0; col < numColumns; ++col) {
-        int startLine = col * linesPerColumn;
-        int endLine = qMin(startLine + linesPerColumn, totalLines);
-        int px = margin + col * colWidth;
-        for (int i = startLine; i < endLine; ++i) {
-            int py = margin + (i - startLine) * lineHeight + fm.ascent();
-            QString line = lines[i];
-            QColor c = Qt::white;
-            if (i > 0 && lines[i - 1].isEmpty()) {
-                c = QColor(255, 200, 100);
-            } else if (i == 0) {
-                c = QColor(100, 200, 255);
-            }
-            p.setPen(c);
-
-            int sepIdx = line.indexOf("→");
-            if (sepIdx > 0) {
-                QString leftPart = line.left(sepIdx).trimmed();
-                QString rightPart = line.mid(sepIdx + 1).trimmed();
-                int ax = px + arrowX;
-                p.drawText(px, py, leftPart);
-                p.drawText(px + ax, py, "→");
-                p.drawText(px + ax + fm.horizontalAdvance("→  "), py, rightPart);
-            } else {
-                p.drawText(px, py, line);
-            }
-        }
-    }
-    p.end();
 
     m_hideTimer.stop();
     m_fadeAnimation.stop();
@@ -142,14 +110,14 @@ void OsdOverlay::paintEvent(QPaintEvent* event) {
     Q_UNUSED(event);
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-
-    painter.setBrush(QColor(0, 0, 0, 180));
-    painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(rect(), 10, 10);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
     if (m_isHelpMode && !m_helpPixmap.isNull()) {
-        painter.drawPixmap(0, 0, m_helpPixmap);
-    } else if (!m_isHelpMode) {
+        painter.drawPixmap(0, 0, width(), height(), m_helpPixmap);
+    } else {
+        painter.setBrush(QColor(0, 0, 0, 180));
+        painter.setPen(Qt::NoPen);
+        painter.drawRoundedRect(rect(), 10, 10);
         painter.setPen(Qt::white);
         painter.setFont(QFont("Segoe UI", 14, QFont::Bold));
         painter.drawText(rect(), Qt::AlignCenter, m_text);

@@ -56,7 +56,19 @@ QVariant Config::value(const QString& key, const QVariant& defaultValue) const {
 void Config::setValue(const QString& key, const QVariant& value) {
     QStringList keys = key.split('.');
     setNestedValue(m_data, keys, value);
-    save();
+    if (m_batchDepth == 0) {
+        save();
+    }
+}
+
+void Config::beginBatch() {
+    ++m_batchDepth;
+}
+
+void Config::endBatch() {
+    if (--m_batchDepth == 0) {
+        save();
+    }
 }
 
 void Config::onFileChanged(const QString& path) {
@@ -64,14 +76,14 @@ void Config::onFileChanged(const QString& path) {
     if (!m_debounceTimer.isActive()) {
         m_debounceTimer.start();
     }
-    QTimer::singleShot(350, this, [this, path]() {
-        QFile file(path);
+    QTimer::singleShot(350, this, [this, filePath = path]() {
+        QFile file(filePath);
         if (file.open(QIODevice::ReadOnly)) {
             m_data = QJsonDocument::fromJson(file.readAll()).object();
             file.close();
         }
-        if (!m_watcher.files().contains(path)) {
-            m_watcher.addPath(path);
+        if (!m_watcher.files().contains(filePath)) {
+            m_watcher.addPath(filePath);
         }
     });
 }
