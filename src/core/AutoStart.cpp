@@ -13,12 +13,7 @@ QString AutoStart::executablePath() {
     return path;
 }
 
-bool AutoStart::isEnabled() {
-    QSettings settings(kRunKey, QSettings::NativeFormat);
-    return settings.contains(kValueName);
-}
-
-void AutoStart::setEnabled(bool enabled) {
+void AutoStart::applyToRegistry(bool enabled) {
     QSettings settings(kRunKey, QSettings::NativeFormat);
     if (enabled) {
         // Quote the path so spaces in the directory don't break execution.
