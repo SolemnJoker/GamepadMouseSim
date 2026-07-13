@@ -101,6 +101,52 @@ No new exceptions will be granted for this kind of bypass.
   `Application::initialize()` and re-read their relevant keys.
 - No subsystem may poll a file or watch another subsystem for changes.
 
+**Signal semantics — async via the file watcher.** `Config::configChanged`
+is **not** emitted synchronously by `Config::setValue`. The precise
+contract is documented in §2.3.1. Subscribers must therefore be prepared
+for the signal to arrive 300–650 ms after `setValue` returns (300 ms
+debounce timer + up to 350 ms Windows watcher re-add singleShot). The
+in-memory state seen by `Config::value(key)` is updated **synchronously**
+inside `setValue` — only the signal is asynchronous. Subscribers that
+need to know the new value must call `Config::value(key)` inside the
+slot and compare against their cached value rather than relying on a
+signal payload.
+
+### 2.3.1 Config signal contract (precise)
+
+The chain from `setValue` to `configChanged` is:
+
+1. `Config::setValue(key, value)` mutates `m_data` **synchronously**
+   (`src/core/Config.cpp:56-62`). `Config::value(key)` returns the new
+   value immediately on return. (This is the only observable
+   "synchronous" effect of `setValue` from a caller's perspective.)
+2. When `m_batchDepth == 0`, `setValue` calls `save()`
+   (`src/core/Config.cpp:40-48`), which rewrites `config.json` to disk
+   and closes the writer. Closing the file triggers
+   `QFileSystemWatcher::fileChanged`.
+3. `Config::onFileChanged` (wired at `src/core/Config.cpp:11` and
+   `src/core/Config.cpp:35`; body at `src/core/Config.cpp:74-89`):
+   - Starts `m_debounceTimer` (single-shot, 300 ms —
+     `src/core/Config.cpp:9-10`). On timeout it emits `configChanged`.
+   - Schedules a `QTimer::singleShot(350 ms, …)` that re-reads the file
+     into `m_data` and re-adds the watched path (Windows watchers drop
+     the path once the writer closes the file).
+4. Net latency from `setValue` returning to `configChanged` firing on
+   the same `Config` instance: 300–650 ms typical; tests should wait
+   ~800 ms for headroom against CI jitter.
+
+**Batching.** `beginBatch()` / `endBatch()` defer the file write (and
+therefore the signal) until `endBatch()`. If multiple key writes are
+made inside a batch, only one `configChanged` fires — after the single
+file rewrite at `endBatch()`. The in-memory state, however, reflects
+every intermediate `setValue` call as it executes.
+
+**Test pattern.** `QSignalSpy::wait(timeout)` or `QTest::qWait(ms)`.
+800 ms is the recommended wait time to span the 300 ms debounce + 350 ms
+re-add singleShot plus jitter. Synchronous `QCOMPARE(spy.count(), 1)`
+immediately after `setValue` will fail; the test must pump the event
+loop first.
+
 ### 2.4 Array lengths go through `kMaxGamepads`
 
 **Rule.** Anywhere a compile-time bound on the number of gamepads appears,
@@ -513,9 +559,17 @@ followed by a 300 ms `m_debounceTimer` (see `src/core/Config.cpp:74-89`).
 Tests must wait **≥ 700 ms** to be robust against scheduling jitter; the
 test code uses `QTest::qWait(800)`.
 
+**Why the wait.** `Config::configChanged` is **not** emitted synchronously
+by `Config::setValue`. `setValue` mutates `m_data` synchronously (so
+`value("autostart")` returns the new value immediately on return), but
+the `configChanged` signal is driven by the `QFileSystemWatcher` chain
+that observes the file write — see §2.3.1 for the precise contract.
+Asserting `QCOMPARE(spy.count(), 1)` immediately after `setValue` will
+fail; the test must pump the event loop first via `QTest::qWait(800)`.
+
 | Test case                                      | Assertion                                                     |
 |------------------------------------------------|---------------------------------------------------------------|
-| `setValue_emitsConfigChanged`                  | `configChanged` fires exactly once after `setValue("autostart", true)`; subsequent `value("autostart")` returns `true`. |
+| `setValue_emitsConfigChanged`                  | After `setValue("autostart", true)` and `QTest::qWait(800)`, `configChanged` fires exactly once; subsequent `value("autostart", false)` returns `true`. (Note: `value("autostart")` returns the new value immediately because `m_data` is mutated synchronously — only the signal is async.) |
 | `setValue_writesToDisk`                        | After `setValue("autostart", true)`, re-reading the on-disk JSON file yields `"autostart": true`. |
 | `reloadReReadsValue`                           | External write to `config.json` + `QTest::qWait(800)` → `configChanged` fires; `value("autostart")` returns the externally written value. |
 | `nestedPathRoundTrip`                          | `setValue("a.b.c", 42)` + `value("a.b.c")` round-trips; sibling keys (e.g. `"a.x"`) are untouched. |

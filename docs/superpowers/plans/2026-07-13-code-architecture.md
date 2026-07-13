@@ -425,6 +425,31 @@ PR1 introduces an `IRegistry` interface that `AutoStart::applyToRegistry`
 calls through, so the tests can drive the round-trip with an in-memory fake
 instead of writing to HKCU.
 
+**Important: `Config::configChanged` is async, not sync.** A common
+mistake is to write `m_config->setValue(...); QCOMPARE(spy.count(), 1);`
+and assume the signal fires synchronously inside `setValue`. It does
+not. The actual contract (see spec §2.3.1):
+
+- `setValue` mutates `m_data` synchronously — so `value(key)` returns the
+  new value immediately.
+- `setValue` then calls `save()` (unless inside a batch), which writes
+  `config.json` to disk and closes the file. That close triggers
+  `QFileSystemWatcher::fileChanged`.
+- `onFileChanged` (`src/core/Config.cpp:74-89`) starts a 300 ms debounce
+  timer (whose `timeout` emits `configChanged`) **and** schedules a
+  350 ms singleShot that re-reads the file and re-adds the watched path
+  (because Windows `QFileSystemWatcher` drops the path once the writer
+  closes the file).
+- Net latency from `setValue` returning to `configChanged` firing:
+  300–650 ms typical; tests should wait ~800 ms.
+
+Every test below that asserts on the signal MUST pump the event loop
+first via `QTest::qWait(800)` (or `QSignalSpy::wait(timeout)`). The
+in-memory `value(...)` check is safe to do synchronously and must be
+asserted separately. Step 5 below already includes the corrected
+wait pattern; the `reloadReReadsValue` case was correct in the initial
+plan and is unchanged.
+
 - [ ] **Step 1: Define `IRegistry` interface in `AutoStart.h`**
 
 Append to `src/core/AutoStart.h`:
@@ -578,6 +603,10 @@ void TestConfigAutostart::cleanup() {
 void TestConfigAutostart::setValue_emitsConfigChanged() {
     QSignalSpy spy(m_config, &Config::configChanged);
     m_config->setValue("autostart", true);
+    // configChanged fires asynchronously via QFileSystemWatcher:
+    //   300 ms debounce + 350 ms re-add singleShot = ~650 ms typical.
+    //   800 ms gives comfortable headroom against CI jitter.
+    QTest::qWait(800);
     QCOMPARE(spy.count(), 1);
     QCOMPARE(m_config->value("autostart", false).toBool(), true);
 }
