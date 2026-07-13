@@ -109,18 +109,20 @@ bool Application::initialize() {
             m_inputMappers[i]->onConfigChanged();
         }
         m_autoController->onConfigChanged();
+
+        // Autostart is the only key this file owns; sync the registry
+        // whenever it changes. Skip if the value hasn't changed to avoid
+        // redundant registry writes on unrelated config edits.
+        const bool wantAutostart = m_config.value("autostart", false).toBool();
+        if (wantAutostart != m_lastAutostart) {
+            m_lastAutostart = wantAutostart;
+            AutoStart::applyToRegistry(wantAutostart);
+        }
     });
 
     // Apply the configured boot autostart state on every launch.
-    if (m_config.value("autostart", false).toBool()) {
-        if (!AutoStart::isEnabled()) {
-            AutoStart::setEnabled(true);
-        }
-    } else {
-        if (AutoStart::isEnabled()) {
-            AutoStart::setEnabled(false);
-        }
-    }
+    m_lastAutostart = m_config.value("autostart", false).toBool();
+    AutoStart::applyToRegistry(m_lastAutostart);
 
     m_gamepadPoller.start();
     for (int i = 0; i < kMaxGamepads; ++i) {

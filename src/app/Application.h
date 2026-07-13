@@ -36,4 +36,5 @@ private:
     std::array<InputMapper*, kMaxGamepads> m_inputMappers;
     std::array<ModeManager*, kMaxGamepads> m_modeManagers;
     QDialog* m_settingsDialog = nullptr;
+    bool m_lastAutostart = false;
 };
