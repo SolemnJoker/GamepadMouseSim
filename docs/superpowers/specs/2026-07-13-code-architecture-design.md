@@ -43,6 +43,13 @@ Concretely:
   until the entry-point docs are updated.
 - Any future change to §2 – §5 requires a PR that updates both this spec and
   the affected entry-point doc in the same change.
+- **Top-level Rule 1 (doc trail)** from `AGENTS.md` applies: any PR that
+  changes a public API, a config key, or a subsystem boundary must update
+  this spec in the same PR. PRs without a spec delta are rejected at review.
+- **Top-level Rule 2 (simulated tests first)** from `AGENTS.md` applies: any
+  new behavior lands with an automated `ctest` test in the same PR. The
+  §7 verification matrix lists every smoke step; each step must either be a
+  `ctest` invocation or an explicit carve-out approved here.
 
 ---
 
@@ -383,12 +390,35 @@ format-only diff is isolated from any logic changes.
 
 ## 7. Verification
 
-### 7.1 Manual smoke (every PR)
+### 7.0 Verification philosophy (per AGENTS.md Rule 2)
+
+Every verification step is either an automated `ctest` invocation or an
+explicitly carved-out manual smoke. Per AGENTS.md, a manual-smoke carve-out
+is allowed only when the behavior cannot be simulated AND the spec names the
+carve-out. The carve-outs in this spec are tracked in §7.4 with owners and
+follow-up issue IDs.
+
+### 7.1 Automated verification (every PR)
+
+```bash
+cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 ^
+   && cmake --build build --config Release ^
+   && ctest --test-dir build --output-on-failure'
+```
+
+Pass criteria: all `ctest` cases pass; zero new warnings vs baseline commit
+`7a58792`.
+
+### 7.2 Manual smoke (only the explicitly carved-out steps)
 
 1. Launch the built `GamepadMouseSim.exe`; system-tray icon appears.
+   *(carved out: visual tray rendering — see §7.4)*
 2. Long-press LT + View for 1 second; mode flips and OSD shows.
+   *(carved out: real gamepad + visual OSD — see §7.4)*
 3. Press LT + R3; fullscreen help overlay appears in Chinese.
+   *(carved out: real gamepad + fullscreen rendering — see §7.4)*
 4. Open Settings dialog; the autostart checkbox reflects the registry state.
+   *(carved out: Qt Widgets rendering — see §7.4)*
 
 ### 7.2 PR-specific verification
 
@@ -410,6 +440,19 @@ cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Bu
 
 Pass criteria: zero new warnings compared to baseline commit
 `7a58792`; zero compile errors.
+
+### 7.4 Manual-smoke carve-outs (per AGENTS.md Rule 2)
+
+| Step | Reason it cannot be simulated today | Owner | Follow-up |
+|------|-------------------------------------|-------|-----------|
+| §7.2.1 Tray icon visible | Qt `QSystemTrayIcon` rendering requires a live Windows shell session; no headless harness. | — | Issue TBD; revisit under testing sub-project. |
+| §7.2.2 LT+View → mode flip | Requires real `XInputGetState` reports from a connected gamepad; XInput has no public test double. | — | Issue TBD; consider a fake `IXInput` shim. |
+| §7.2.3 LT+R3 → help overlay | Same as §7.2.2 + visual rendering. | — | Issue TBD. |
+| §7.2.4 Autostart checkbox state | Settings dialog requires a live user click; UI behavior not yet unit-testable without a UI test framework. | — | Issue TBD; revisit when Squish/pytest-qt is evaluated. |
+
+Until each row above is closed, the corresponding manual-smoke step is the
+acceptance gate for that behavior, and the PR description must state
+"manual-smoke verified" with the verifier's initials and date.
 
 ---
 
@@ -477,11 +520,19 @@ test code uses `QTest::qWait(800)`.
 | `reloadReReadsValue`                           | External write to `config.json` + `QTest::qWait(800)` → `configChanged` fires; `value("autostart")` returns the externally written value. |
 | `nestedPathRoundTrip`                          | `setValue("a.b.c", 42)` + `value("a.b.c")` round-trips; sibling keys (e.g. `"a.x"`) are untouched. |
 
-### 8.5 Out of scope for these tests
+### 8.5 Out of scope for these tests (and how to lift the carve-out)
 
-- ❌ Registry round-trip (depends on Windows + HKCU permissions).
-- ❌ Subsystem reactions to `configChanged` (covered by manual smoke).
-- ❌ Log severity (no public assertion surface; manual smoke only).
+| Item                                          | Why carved out                                                       | Path to simulate                                                                                  |
+|-----------------------------------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| Full registry round-trip via `AutoStart`      | `QSettings(NativeFormat)` writes to HKCU, requires Windows user perms. | Refactor `AutoStart` to take an injected `IRegistry` interface; tests use an in-memory fake. (Tracked under the testing sub-project; not in PR1.) |
+| Subsystem reactions to `configChanged`        | Live subsystems (ModeManager, InputMapper) require a Qt event loop and live XInput. | Inject a fake `IConfigSubscriber` and assert callbacks fire; deferred to testing sub-project.    |
+| Log severity                                  | No public assertion surface on `qInstallMessageHandler`.             | Capture `QtMsgHandler` output into a string buffer in the test; assert substring + level. (Tracked under testing sub-project; PR3 adds the capture seam.) |
+| LT+View hold → mode flip                      | Requires a real gamepad input stream.                                | Inject fake `IXInput` shim returning scripted `GamepadState`s; **planned for PR1's follow-up**. |
+| Help overlay rendering                        | Requires live Qt Widgets rendering surface.                          | `QWidget::grab()` + image diff; deferred.                                                         |
+
+For PR1 specifically, the `setValue_*` and `reloadReReadsValue` tests in §8.4
+**are** simulated: they use `QTemporaryFile` for the on-disk JSON and avoid
+real HKCU writes. This satisfies AGENTS.md Rule 2 for PR1's behavior surface.
 
 ---
 
