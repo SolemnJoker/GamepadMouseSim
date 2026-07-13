@@ -81,6 +81,12 @@ constexpr int kGamepadPollHz = 60;
 constexpr int kGamepadPollIntervalMs = 1000 / kGamepadPollHz;
 constexpr int kMaxGamepads = 4;
 
+// XInput raw-value normalization ranges (see src/win/XInputWrapper.h).
+constexpr int kXInputThumbMax     = 32767;   // signed thumb-stick saturation
+constexpr int kXInputTriggerMax   = 255;     // unsigned trigger saturation
+constexpr int kXInputDeadzoneMax  = 7849;    // XInput recommended deadzone upper bound
+constexpr int kMsPerSecond        = 1000;    // seconds → milliseconds
+
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_UP = 0x0001;
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_DOWN = 0x0002;
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_LEFT = 0x0004;
