@@ -1,5 +1,6 @@
 #include "ModeManager.h"
 #include "Config.h"
+#include "core/Types.h"
 #include <QDebug>
 
 ModeManager::ModeManager(Config* config, int controllerIndex, QObject* parent)
@@ -73,6 +74,6 @@ void ModeManager::setMode(GamepadMode mode) {
 }
 
 void ModeManager::loadConfig() {
-    m_lockoutMs = m_config->value("monitoring.manual_switch_lockout_seconds", 3).toInt() * 1000;
+    m_lockoutMs = m_config->value("monitoring.manual_switch_lockout_seconds", 3).toInt() * kMsPerSecond;
     qDebug() << "Pad" << m_controllerIndex << "config loaded - lockout:" << m_lockoutMs << "ms";
 }

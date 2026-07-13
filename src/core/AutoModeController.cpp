@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "ModeManager.h"
 #include "GameDetector.h"
+#include "core/Types.h"
 #include <QDateTime>
 #include <QDebug>
 
@@ -40,7 +41,7 @@ void AutoModeController::loadConfig() {
 
 void AutoModeController::applyInterval() {
     if (m_timer.isActive()) {
-        m_timer.start(m_intervalSec * 1000);
+        m_timer.start(m_intervalSec * kMsPerSecond);
     }
 }
 
@@ -49,7 +50,7 @@ void AutoModeController::start() {
         qDebug() << "AutoModeController: disabled, not starting timer";
         return;
     }
-    m_timer.start(m_intervalSec * 1000);
+    m_timer.start(m_intervalSec * kMsPerSecond);
     qDebug() << "AutoModeController started";
 }
 
@@ -62,7 +63,7 @@ void AutoModeController::onConfigChanged() {
     // start/stop the timer based on the new enabled flag
     if (m_enabled) {
         if (!m_timer.isActive()) {
-            m_timer.start(m_intervalSec * 1000);
+            m_timer.start(m_intervalSec * kMsPerSecond);
         }
     } else {
         m_timer.stop();
