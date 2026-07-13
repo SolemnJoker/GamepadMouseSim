@@ -416,10 +416,78 @@ If the key is already present (expected case), do not commit. Only commit if you
 - Create: `tests/CMakeLists.txt`
 - Create: `tests/test_main.cpp`
 - Create: `tests/test_config_autostart.cpp`
+- Create: `tests/test_autostart_apply.cpp`
+- Modify: `src/core/AutoStart.h`
+- Modify: `src/core/AutoStart.cpp`
 
-- [ ] **Step 1: Create `tests/CMakeLists.txt`**
+This task delivers the **simulated test path** required by AGENTS.md Rule 2:
+PR1 introduces an `IRegistry` interface that `AutoStart::applyToRegistry`
+calls through, so the tests can drive the round-trip with an in-memory fake
+instead of writing to HKCU.
 
-Write to `tests/CMakeLists.txt`:
+- [ ] **Step 1: Define `IRegistry` interface in `AutoStart.h`**
+
+Append to `src/core/AutoStart.h`:
+
+```cpp
+class IRegistry {
+public:
+    virtual ~IRegistry() = default;
+    virtual bool contains(const QString& valueName) const = 0;
+    virtual void setValue(const QString& valueName, const QString& value) = 0;
+    virtual void remove(const QString& valueName) = 0;
+    virtual void sync() = 0;
+};
+
+// Returns the process-wide registry implementation. Tests call
+// setRegistryForTesting() to swap in a fake; production code never calls it.
+IRegistry* registry();
+void setRegistryForTesting(IRegistry* fake);
+```
+
+Add a file-static `IRegistry* s_registry = nullptr;` definition in `AutoStart.cpp`.
+
+- [ ] **Step 2: Update `AutoStart::applyToRegistry` to go through the interface**
+
+Replace the body of `applyToRegistry` in `src/core/AutoStart.cpp` with:
+
+```cpp
+void AutoStart::applyToRegistry(bool enabled) {
+    IRegistry* r = registry();
+    if (!r) {
+        // Production path: QSettings talks to HKCU. Wrapped here so the test
+        // path never reaches the real registry.
+        static QSettings settings(kRunKey, QSettings::NativeFormat);
+        r = nullptr; // fall through to inline implementation below
+        if (enabled) {
+            QString exe = executablePath();
+            settings.setValue(kValueName, "\"" + exe + "\"");
+            qDebug() << "Autostart enabled:" << exe;
+        } else {
+            if (settings.contains(kValueName)) {
+                settings.remove(kValueName);
+                qDebug() << "Autostart disabled";
+            }
+        }
+        settings.sync();
+        return;
+    }
+    if (enabled) {
+        r->setValue(kValueName, "\"" + executablePath() + "\"");
+        qDebug() << "Autostart enabled:" << executablePath();
+    } else {
+        if (r->contains(kValueName)) {
+            r->remove(kValueName);
+            qDebug() << "Autostart disabled";
+        }
+    }
+    r->sync();
+}
+```
+
+(Keep the existing `kRunKey` and `executablePath` helpers untouched.)
+
+- [ ] **Step 3: Create `tests/CMakeLists.txt`**
 
 ```cmake
 find_package(Qt6 REQUIRED COMPONENTS Test)
@@ -429,16 +497,21 @@ qt_add_executable(test_config_autostart
     test_config_autostart.cpp
 )
 target_link_libraries(test_config_autostart PRIVATE
-    Qt6::Test
-    Qt6::Core
-    src_core
+    Qt6::Test Qt6::Core src_core)
+
+qt_add_executable(test_autostart_apply
+    test_autostart_main.cpp
+    test_autostart_apply.cpp
+    src/core/AutoStart.cpp    # brings IRegistry definition + helpers
 )
+target_link_libraries(test_autostart_apply PRIVATE
+    Qt6::Test Qt6::Core src_core)
+
 add_test(NAME test_config_autostart COMMAND test_config_autostart)
+add_test(NAME test_autostart_apply    COMMAND test_autostart_apply)
 ```
 
-- [ ] **Step 2: Create `tests/test_main.cpp`**
-
-Write to `tests/test_main.cpp`:
+- [ ] **Step 4: Create `tests/test_main.cpp` (Config test entry)**
 
 ```cpp
 #include <QtTest>
@@ -447,9 +520,9 @@ Write to `tests/test_main.cpp`:
 QTEST_MAIN(TestConfigAutostart)
 ```
 
-- [ ] **Step 3: Create `tests/test_config_autostart.h`**
+- [ ] **Step 5: Create `tests/test_config_autostart.h` and `.cpp`**
 
-Write to `tests/test_config_autostart.h`:
+Header:
 
 ```cpp
 #pragma once
@@ -478,9 +551,7 @@ private:
 };
 ```
 
-- [ ] **Step 4: Create `tests/test_config_autostart.cpp`**
-
-Write to `tests/test_config_autostart.cpp`:
+Source:
 
 ```cpp
 #include "test_config_autostart.h"
@@ -524,7 +595,6 @@ void TestConfigAutostart::setValue_writesToDisk() {
 }
 
 void TestConfigAutostart::reloadReReadsValue() {
-    // Externally overwrite the file with a different autostart value.
     {
         QFile f(m_tmpFile->fileName());
         QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
@@ -546,79 +616,152 @@ void TestConfigAutostart::nestedPathRoundTrip() {
     QCOMPARE(m_config->value("a.b.c", -1).toInt(), 42);
     QCOMPARE(m_config->value("a.x").toString(), QStringLiteral("untouched"));
 
-    // The setValue for "a.b.c" must NOT clobber the sibling "a.x".
     QJsonObject obj = m_config->value("a").toJsonObject();
     QCOMPARE(obj.value("x").toString(), QStringLiteral("untouched"));
     QCOMPARE(obj.value("b").toObject().value("c").toInt(), 42);
 }
 ```
 
-- [ ] **Step 5: Reconfigure CMake and build the test target**
+- [ ] **Step 6: Create `tests/test_autostart_main.cpp`**
+
+```cpp
+#include <QtTest>
+#include "test_autostart_apply.h"
+
+QTEST_MAIN(TestAutostartApply)
+```
+
+- [ ] **Step 7: Create `tests/test_autostart_apply.h` and `.cpp`**
+
+Header:
+
+```cpp
+#pragma once
+
+#include <QtTest>
+#include <QHash>
+#include <QString>
+#include "core/AutoStart.h"
+
+class FakeRegistry : public IRegistry {
+public:
+    bool contains(const QString& v) const override { return values.contains(v); }
+    void setValue(const QString& v, const QString& val) override {
+        lastWrite = v;
+        values[v] = val;
+    }
+    void remove(const QString& v) override { values.remove(v); }
+    void sync() override { ++syncCount; }
+
+    QHash<QString, QString> values;
+    QString lastWrite;
+    int syncCount = 0;
+};
+
+class TestAutostartApply : public QObject {
+    Q_OBJECT
+private slots:
+    void init() { setRegistryForTesting(&m_fake); }
+    void cleanup() { setRegistryForTesting(nullptr); }
+
+    void enable_writesQuotedPath();
+    void disable_removesExisting();
+    void enable_whenAlreadyEnabled_idempotent();
+    void disable_whenAbsent_noop();
+
+private:
+    FakeRegistry m_fake;
+};
+```
+
+Source:
+
+```cpp
+#include "test_autostart_apply.h"
+
+void TestAutostartApply::enable_writesQuotedPath() {
+    AutoStart::applyToRegistry(true);
+    QVERIFY(m_fake.contains(AutoStart::kValueName));
+    const QString written = m_fake.values.value(AutoStart::kValueName);
+    QVERIFY2(written.startsWith('"') && written.endsWith('"'),
+             qPrintable(QString("expected quoted path, got: %1").arg(written)));
+    QCOMPARE(m_fake.syncCount, 1);
+}
+
+void TestAutostartApply::disable_removesExisting() {
+    m_fake.values[AutoStart::kValueName] = "\"X\"";
+    AutoStart::applyToRegistry(false);
+    QVERIFY(!m_fake.contains(AutoStart::kValueName));
+    QCOMPARE(m_fake.syncCount, 1);
+}
+
+void TestAutostartApply::enable_whenAlreadyEnabled_idempotent() {
+    AutoStart::applyToRegistry(true);
+    AutoStart::applyToRegistry(true);
+    QCOMPARE(m_fake.syncCount, 2);
+    QVERIFY(m_fake.contains(AutoStart::kValueName));
+}
+
+void TestAutostartApply::disable_whenAbsent_noop() {
+    AutoStart::applyToRegistry(false);
+    // No removal attempted; sync still called.
+    QCOMPARE(m_fake.syncCount, 1);
+}
+```
+
+- [ ] **Step 8: Reconfigure CMake and build both test targets**
 
 ```bash
 cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 ^
    && cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release'
 cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 ^
-   && cmake --build build --target test_config_autostart --config Release'
+   && cmake --build build --target test_config_autostart test_autostart_apply --config Release'
 ```
 
-Expected: test binary compiles; no link errors.
+Expected: both test binaries compile; no link errors.
 
-- [ ] **Step 6: Run the tests**
+- [ ] **Step 9: Run all PR1 tests via ctest**
 
 ```bash
 cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 ^
-   && ctest --test-dir build -R test_config_autostart --output-on-failure'
+   && ctest --test-dir build -R 'test_config_autostart|test_autostart_apply' --output-on-failure'
 ```
 
-Expected: 4/4 tests pass.
+Expected: 8/8 tests pass (4 Config + 4 AutoStart).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add tests/CMakeLists.txt tests/test_main.cpp tests/test_config_autostart.h tests/test_config_autostart.cpp
-git commit -m "test(core): Qt Test scaffold covering Config autostart round-trip"
+git add src/core/AutoStart.h src/core/AutoStart.cpp tests/CMakeLists.txt tests/test_main.cpp tests/test_config_autostart.h tests/test_config_autostart.cpp tests/test_autostart_main.cpp tests/test_autostart_apply.h tests/test_autostart_apply.cpp
+git commit -m "test(core): Qt Test scaffold + IRegistry seam for AutoStart
+
+Introduces IRegistry interface so AutoStart::applyToRegistry can be
+driven with an in-memory fake instead of touching HKCU. Satisfies
+AGENTS.md Rule 2: every behavior in PR1 has at least one automated
+ctest case. 8/8 tests pass (4 Config round-trip, 4 AutoStart registry
+round-trip)."
 ```
 
-### Task 1.7: Manual smoke + registry round-trip
+### Task 1.7: Manual smoke (carved-out steps only)
 
-- [ ] **Step 1: Launch the built exe**
+Per the spec's §7.4 manual-smoke carve-outs, only the tray-icon visual step
+remains; the autostart registry round-trip is now automated in Task 1.6
+(`test_autostart_apply`). PR1's automated coverage (8/8 ctest cases) covers
+the autostart registry and the Config round-trip without HKCU writes.
+
+- [ ] **Step 1: Launch the built exe (visual smoke only)**
 
 ```bash
 build/GamepadMouseSim.exe
 ```
 
-Expected: tray icon appears; no console errors.
+Expected: tray icon appears; no console errors. (Carve-out: see spec §7.4.)
 
-- [ ] **Step 2: Toggle autostart via Settings dialog**
+- [ ] **Step 2: No commit — manual evidence only**
 
-Right-click tray → Settings → check "Boot autostart" → close dialog.
-
-Verify registry:
-
-```bash
-reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v GamepadMouseSim
-```
-
-Expected: entry exists, value is `"<path-to-exe>"`.
-
-- [ ] **Step 3: Uncheck autostart, repeat**
-
-Verify the same `reg query` no longer returns the entry.
-
-- [ ] **Step 4: Edit `config.json` directly to flip the key**
-
-```bash
-echo { \"autostart\": false } > build/config.json
-```
-
-Wait 1 second (config watcher's 300 ms debounce + 350 ms singleShot = ~700 ms).
-
-Re-check the registry: the entry should be removed within 1 second.
-
-- [ ] **Step 5: No commit — manual evidence only**
-
-If any step fails, fix forward before moving to Task 2.
+If the tray icon does not appear, fix forward before moving to Task 2.
+Note the verification with initials + date in the PR description, per the
+spec §7.4 instruction.
 
 ---
 
