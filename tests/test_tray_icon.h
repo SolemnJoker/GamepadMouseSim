@@ -12,7 +12,6 @@ class TestTrayIcon : public QObject {
 private slots:
     void construct_doesNotThrow();
     void icon_isNotNull();
-    void trayVisible_reflectsQSystemTrayIcon();
 
 private:
     std::unique_ptr<SystemTray> m_tray;

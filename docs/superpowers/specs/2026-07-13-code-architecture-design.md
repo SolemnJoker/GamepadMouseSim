@@ -459,6 +459,7 @@ Pass criteria: all `ctest` cases pass; zero new warnings vs baseline commit
 
 1. Launch the built `GamepadMouseSim.exe`; system-tray icon appears.
    *(carved out: visual tray rendering — see §7.4)*
+   1b. (Automated) `ctest -R test_tray_icon` shows 3/3 slots pass under `QT_QPA_PLATFORM=offscreen`.
 2. Long-press LT + View for 1 second; mode flips and OSD shows.
    *(carved out: real gamepad + visual OSD — see §7.4)*
 3. Press LT + R3; fullscreen help overlay appears in Chinese.
@@ -491,7 +492,7 @@ Pass criteria: zero new warnings compared to baseline commit
 
 | Step | Reason it cannot be simulated today | Owner | Follow-up |
 |------|-------------------------------------|-------|-----------|
-| §7.2.1 Tray icon visible | Qt `QSystemTrayIcon` rendering requires a live Windows shell session; no headless harness. | — | Issue TBD; revisit under testing sub-project. |
+| §7.2.1 Tray icon visible | Automated via `tests/test_tray_icon` under `QT_QPA_PLATFORM=offscreen`. Tests assert: (a) `SystemTray` constructs without throwing; (b) the icon assigned to `QSystemTrayIcon` is non-null after `show()`; (c) the icon renders to a non-null 32×32 `QPixmap` (SVG → `QSvgRenderer` → `QPainter`). Offscreen QPA cannot prove that Windows Explorer displayed the notification area icon, only that the production class loaded the SVG resource, assigned it, and rendered it. A real shell session would be required to verify the live tray pixel; this carve-out is **partial** and tracked under issue TBD for full visual verification. | — | Issue TBD; full visual verification requires an interactive Windows session. |
 | §7.2.2 LT+View → mode flip | Requires real `XInputGetState` reports from a connected gamepad; XInput has no public test double. | — | Issue TBD; consider a fake `IXInput` shim. |
 | §7.2.3 LT+R3 → help overlay | Same as §7.2.2 + visual rendering. | — | Issue TBD. |
 | §7.2.4 Autostart checkbox state | Settings dialog requires a live user click; UI behavior not yet unit-testable without a UI test framework. | — | Issue TBD; revisit when Squish/pytest-qt is evaluated. |

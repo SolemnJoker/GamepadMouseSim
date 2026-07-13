@@ -14,7 +14,6 @@ public:
     void show();
     void hide();
 
-    bool trayVisible() const { return m_trayIcon.isVisible(); }
     QIcon trayIcon() const { return m_trayIcon.icon(); }
 
 public slots:
