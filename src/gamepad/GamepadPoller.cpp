@@ -51,7 +51,7 @@ static float applyDeadzone(float x, float y, float deadzone, float& outX, float&
 }
 
 void GamepadPoller::pollOnce() {
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kMaxGamepads; ++i) {
         XINPUT_STATE xState;
         bool connected = m_xinput.getState(i, &xState);
 
@@ -59,17 +59,20 @@ void GamepadPoller::pollOnce() {
         state.connected = connected;
 
         if (connected) {
-            float lx = xState.Gamepad.sThumbLX / 32767.0f;
-            float ly = xState.Gamepad.sThumbLY / 32767.0f;
-            float rx = xState.Gamepad.sThumbRX / 32767.0f;
-            float ry = xState.Gamepad.sThumbRY / 32767.0f;
+            constexpr float kThumbMax = static_cast<float>(kXInputThumbMax);
+            float lx = xState.Gamepad.sThumbLX / kThumbMax;
+            float ly = xState.Gamepad.sThumbLY / kThumbMax;
+            float rx = xState.Gamepad.sThumbRX / kThumbMax;
+            float ry = xState.Gamepad.sThumbRY / kThumbMax;
 
-            float deadzone = 7849.0f / 32767.0f;
+            constexpr float kDeadzoneMax = static_cast<float>(kXInputDeadzoneMax);
+            float deadzone = kDeadzoneMax / kThumbMax;
             applyDeadzone(lx, ly, deadzone, state.leftX, state.leftY);
             applyDeadzone(rx, ry, deadzone, state.rightX, state.rightY);
 
-            state.leftTrigger = xState.Gamepad.bLeftTrigger / 255.0f;
-            state.rightTrigger = xState.Gamepad.bRightTrigger / 255.0f;
+            constexpr float kTriggerMax = static_cast<float>(kXInputTriggerMax);
+            state.leftTrigger = xState.Gamepad.bLeftTrigger / kTriggerMax;
+            state.rightTrigger = xState.Gamepad.bRightTrigger / kTriggerMax;
             state.buttons = xState.Gamepad.wButtons;
         }
 

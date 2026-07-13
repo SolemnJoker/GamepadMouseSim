@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <QObject>
 #include <QThread>
 #include "core/Types.h"
@@ -33,5 +34,5 @@ private:
 
     XInputWrapper m_xinput;
     PollThread m_thread;
-    GamepadState m_prevState[4];
+    std::array<GamepadState, kMaxGamepads> m_prevState;
 };
