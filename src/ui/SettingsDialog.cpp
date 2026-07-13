@@ -1,6 +1,5 @@
 #include "SettingsDialog.h"
 #include "core/Config.h"
-#include "core/AutoStart.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -351,7 +350,7 @@ void SettingsDialog::loadValues() {
     }
     m_osdEnabled->setChecked(m_config->value("osd.enabled", true).toBool());
     m_osdDuration->setValue(m_config->value("osd.duration_seconds", 2).toInt());
-    m_autostart->setChecked(AutoStart::isEnabled());
+    m_autostart->setChecked(m_config->value("autostart", false).toBool());
 
     // Stick
     m_sensX->setValue(m_config->value("mouse_mode.left_stick.sensitivity_x", 1.0).toDouble());
@@ -418,12 +417,9 @@ void SettingsDialog::saveValues() {
     m_config->setValue("osd.enabled", m_osdEnabled->isChecked());
     m_config->setValue("osd.duration_seconds", m_osdDuration->value());
 
-    // Boot autostart (registry, not the JSON field)
-    bool as = m_autostart->isChecked();
-    if (as != AutoStart::isEnabled()) {
-        AutoStart::setEnabled(as);
-    }
-    m_config->setValue("autostart", as);
+    // Boot autostart: write through Config so configChanged fans out
+    // to Application, which is the sole writer of the registry.
+    m_config->setValue("autostart", m_autostart->isChecked());
 
     // Stick
     m_config->setValue("mouse_mode.left_stick.sensitivity_x", m_sensX->value());
