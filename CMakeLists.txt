@@ -11,11 +11,20 @@ set(Qt6_DIR "C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6")
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
 
+# src_core: pure config + types static lib (no Win32/gamepad/input/ui deps).
+# Lets future tests link Config without dragging in the rest of the engine.
+add_library(src_core STATIC
+    src/core/Config.cpp
+    src/core/Types.cpp
+)
+target_include_directories(src_core PUBLIC src)
+target_link_libraries(src_core PUBLIC Qt6::Core)
+
+enable_testing()
+
 set(SOURCES
     src/main.cpp
     src/app/Application.cpp
-    src/core/Config.cpp
-    src/core/Types.cpp
     src/core/ModeManager.cpp
     src/core/ProcessDetector.cpp
     src/core/AutoStart.cpp
@@ -36,14 +45,12 @@ set(SOURCES
 
 set(HEADERS
     src/app/Application.h
-    src/core/Config.h
     src/core/ModeManager.h
     src/core/ProcessDetector.h
     src/core/AutoStart.h
     src/core/SysUsage.h
     src/core/GameDetector.h
     src/core/AutoModeController.h
-    src/core/Types.h
     src/gamepad/GamepadPoller.h
     src/gamepad/ComboKeyDetector.h
     src/input/InputMapper.h
@@ -76,6 +83,7 @@ add_dependencies(${PROJECT_NAME} generate_help_png)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+    src_core
     Qt6::Widgets
     Qt6::Svg
     xinput
@@ -90,3 +98,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
 )
+
+# TODO(Task-1.6): add_subdirectory(tests)
