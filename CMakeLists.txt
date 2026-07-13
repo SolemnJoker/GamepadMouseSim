@@ -99,4 +99,4 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
 )
 
-# TODO(Task-1.6): add_subdirectory(tests)
+add_subdirectory(tests)

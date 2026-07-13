@@ -4,6 +4,20 @@
 #include <QFileInfo>
 #include <QDebug>
 
+namespace {
+// Process-wide injection seam for AutoStart::applyToRegistry().
+// nullptr in production; tests call setRegistryForTesting() to install a fake.
+IRegistry* g_testRegistry = nullptr;
+}
+
+IRegistry* registry() {
+    return g_testRegistry;
+}
+
+void setRegistryForTesting(IRegistry* fake) {
+    g_testRegistry = fake;
+}
+
 const QString AutoStart::kRunKey   = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 const QString AutoStart::kValueName = "GamepadMouseSim";
 
@@ -14,9 +28,24 @@ QString AutoStart::executablePath() {
 }
 
 void AutoStart::applyToRegistry(bool enabled) {
+    if (IRegistry* r = registry()) {
+        // Test path: drive through the injected fake.
+        if (enabled) {
+            r->setValue(kValueName, "\"" + executablePath() + "\"");
+            qDebug() << "Autostart enabled:" << executablePath();
+        } else {
+            if (r->contains(kValueName)) {
+                r->remove(kValueName);
+                qDebug() << "Autostart disabled";
+            }
+        }
+        r->sync();
+        return;
+    }
+
+    // Production path: real HKCU writes.
     QSettings settings(kRunKey, QSettings::NativeFormat);
     if (enabled) {
-        // Quote the path so spaces in the directory don't break execution.
         QString exe = executablePath();
         settings.setValue(kValueName, "\"" + exe + "\"");
         qDebug() << "Autostart enabled:" << exe;
