@@ -59,7 +59,9 @@ Bootstrap order in `Application::initialize()`:
 - **Sticky modifier actions** (e.g. Alt+Tab) need button-level debounce flags in `KeyboardMapper` — see existing `m_ltTabBlocked`. Add new flags there when adding similar actions, otherwise Alt can release prematurely.
 - **Game-detection sustained thresholds** use accumulator windows in `GameDetector` (`m_cpuSustainedAccumMs` etc.) — instant spikes must not auto-switch modes.
 - **Win32 autostart** writes to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (no admin), via `src/core/AutoStart.{h,cpp}`. Driven by `autostart` config key.
-- No CI, no tests, no formatter configured. No `tests/` directory exists.
+- **Commit format**: see `docs/superpowers/specs/2026-07-14-commit-workflow-design.md` §2. Use `fix:`, `feat:`, `refactor:`, `test:`, `chore:`, `docs:`, `build:`, `style:` with an optional module-scope and a concise imperative description.
+- **Merge checklist**: see `PULL_REQUEST_TEMPLATE.md` in the repo root. Every PR or merge-to-master should verify each line before proceeding.
+- **Branch naming** (recommended): `<type>/<kebab-case-description>`. Direct master pushes are still allowed.
 - `.gitignore` excludes `build/`, `dist/`, `*.exe`, `*.dll`, `*.log`, generated `moc_*`/`qrc_*`, `GamepadMouseSim_autogen/`, `.mimocode/`, `review/`, `skills/`, `resources/icons/help.png`, `nul`. (`docs/` was unignored 2026-07-13 to host standards/specs.)
 
 ## Top-level project rules (apply to every change)
