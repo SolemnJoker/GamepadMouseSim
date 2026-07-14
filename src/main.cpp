@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     Application appLogic;
     if (!appLogic.initialize()) {
-        qDebug() << "Failed to initialize";
+        qCritical() << "Failed to initialize";
         return 1;
     }
 
