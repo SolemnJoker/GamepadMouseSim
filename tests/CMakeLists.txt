@@ -42,3 +42,16 @@ add_test(NAME test_autostart_apply    COMMAND test_autostart_apply)
 add_test(NAME test_tray_icon         COMMAND test_tray_icon)
 set_tests_properties(test_tray_icon PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Log severity: captures qWarning/qCritical/qDebug output via a custom
+# message handler and asserts the correct severity labels are applied.
+qt_add_executable(test_log_severity
+    test_log_severity_main.cpp
+    test_log_severity.cpp
+)
+target_link_libraries(test_log_severity PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_log_severity COMMAND test_log_severity)
