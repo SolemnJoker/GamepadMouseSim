@@ -36,7 +36,7 @@ bool Application::initialize() {
     }
 
     if (!loaded) {
-        qDebug() << "WARNING: No config file found, using defaults";
+        qWarning() << "No config file found, using defaults";
     } else {
         qDebug() << "Config loaded successfully";
     }
