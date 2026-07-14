@@ -1,75 +1,69 @@
 #include "SettingsDialog.h"
 #include "core/Config.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#include <QDebug>
+#include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGroupBox>
-#include <QDialogButtonBox>
-#include <QScrollArea>
+#include <QHBoxLayout>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QVBoxLayout>
 #include <functional>
-#include <QDebug>
 
 // All editable button names (matches buttonBitToName() + the two triggers).
 static const QStringList kAllButtons = {
-    "A", "B", "X", "Y",
-    "DpadUp", "DpadDown", "DpadLeft", "DpadRight",
-    "LB", "RB", "LT", "RT", "L3", "R3", "View", "Menu"
-};
+    "A",  "B",  "X",  "Y",  "DpadUp", "DpadDown", "DpadLeft", "DpadRight",
+    "LB", "RB", "LT", "RT", "L3",     "R3",       "View",     "Menu"};
 
 // The full set of selectable actions, in display order.
-static const QVector<ButtonAction> kActionOrder = {
-    ButtonAction::None,
-    ButtonAction::MouseLeftClick,
-    ButtonAction::MouseRightClick,
-    ButtonAction::MouseMiddleClick,
-    ButtonAction::MouseLeftHold,
-    ButtonAction::MouseRightHold,
-    ButtonAction::KeyEnter,
-    ButtonAction::KeyEscape,
-    ButtonAction::KeyTab,
-    ButtonAction::KeyShiftTab,
-    ButtonAction::KeyAltTab,
-    ButtonAction::KeyAltF4,
-    ButtonAction::KeyWin,
-    ButtonAction::KeyWinD,
-    ButtonAction::KeyBackspace,
-    ButtonAction::KeyDelete,
-    ButtonAction::KeyHome,
-    ButtonAction::KeyEnd,
-    ButtonAction::KeyPageUp,
-    ButtonAction::KeyPageDown,
-    ButtonAction::KeyArrowUp,
-    ButtonAction::KeyArrowDown,
-    ButtonAction::KeyArrowLeft,
-    ButtonAction::KeyArrowRight,
-    ButtonAction::KeyCtrlW,
-    ButtonAction::KeyCtrlA,
-    ButtonAction::KeyCtrlC,
-    ButtonAction::KeyCtrlV,
-    ButtonAction::KeyCtrlX,
-    ButtonAction::KeyCtrlZ,
-    ButtonAction::KeyCtrlShiftZ,
-    ButtonAction::KeyCtrlS,
-    ButtonAction::KeyCtrlTab,
-    ButtonAction::KeyCtrlShiftTab,
-    ButtonAction::KeyF5,
-    ButtonAction::MediaPrevTrack,
-    ButtonAction::MediaNextTrack,
-    ButtonAction::VolumeUp,
-    ButtonAction::VolumeDown,
-    ButtonAction::VolumeMute,
-    ButtonAction::ScrollUp,
-    ButtonAction::ScrollDown,
-    ButtonAction::ScrollLeft,
-    ButtonAction::ScrollRight,
-    ButtonAction::ShowHelp
-};
+static const QVector<ButtonAction> kActionOrder = {ButtonAction::None,
+                                                   ButtonAction::MouseLeftClick,
+                                                   ButtonAction::MouseRightClick,
+                                                   ButtonAction::MouseMiddleClick,
+                                                   ButtonAction::MouseLeftHold,
+                                                   ButtonAction::MouseRightHold,
+                                                   ButtonAction::KeyEnter,
+                                                   ButtonAction::KeyEscape,
+                                                   ButtonAction::KeyTab,
+                                                   ButtonAction::KeyShiftTab,
+                                                   ButtonAction::KeyAltTab,
+                                                   ButtonAction::KeyAltF4,
+                                                   ButtonAction::KeyWin,
+                                                   ButtonAction::KeyWinD,
+                                                   ButtonAction::KeyBackspace,
+                                                   ButtonAction::KeyDelete,
+                                                   ButtonAction::KeyHome,
+                                                   ButtonAction::KeyEnd,
+                                                   ButtonAction::KeyPageUp,
+                                                   ButtonAction::KeyPageDown,
+                                                   ButtonAction::KeyArrowUp,
+                                                   ButtonAction::KeyArrowDown,
+                                                   ButtonAction::KeyArrowLeft,
+                                                   ButtonAction::KeyArrowRight,
+                                                   ButtonAction::KeyCtrlW,
+                                                   ButtonAction::KeyCtrlA,
+                                                   ButtonAction::KeyCtrlC,
+                                                   ButtonAction::KeyCtrlV,
+                                                   ButtonAction::KeyCtrlX,
+                                                   ButtonAction::KeyCtrlZ,
+                                                   ButtonAction::KeyCtrlShiftZ,
+                                                   ButtonAction::KeyCtrlS,
+                                                   ButtonAction::KeyCtrlTab,
+                                                   ButtonAction::KeyCtrlShiftTab,
+                                                   ButtonAction::KeyF5,
+                                                   ButtonAction::MediaPrevTrack,
+                                                   ButtonAction::MediaNextTrack,
+                                                   ButtonAction::VolumeUp,
+                                                   ButtonAction::VolumeDown,
+                                                   ButtonAction::VolumeMute,
+                                                   ButtonAction::ScrollUp,
+                                                   ButtonAction::ScrollDown,
+                                                   ButtonAction::ScrollLeft,
+                                                   ButtonAction::ScrollRight,
+                                                   ButtonAction::ShowHelp};
 
 SettingsDialog::SettingsDialog(Config* config, QWidget* parent)
-    : QDialog(parent)
-    , m_config(config)
-{
+    : QDialog(parent), m_config(config) {
     setWindowTitle(QStringLiteral("设置"));
     setMinimumSize(560, 520);
 
@@ -83,8 +77,7 @@ SettingsDialog::SettingsDialog(Config* config, QWidget* parent)
     buildMappingTab();
     buildAutoSwitchTab();
 
-    auto* btns = new QDialogButtonBox(
-        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     btns->button(QDialogButtonBox::Ok)->setText(QStringLiteral("确定"));
     btns->button(QDialogButtonBox::Cancel)->setText(QStringLiteral("取消"));
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
@@ -132,7 +125,8 @@ void SettingsDialog::buildGeneralTab() {
         m_comboButtons->addItem(b);
     }
     m_comboButtons->setMaximumHeight(160);
-    cgLayout->addWidget(new QLabel(QStringLiteral("按住以下按键切换模式（可多选，通常选 2 个）:"), this));
+    cgLayout->addWidget(
+        new QLabel(QStringLiteral("按住以下按键切换模式（可多选，通常选 2 个）:"), this));
     cgLayout->addWidget(m_comboButtons);
 
     m_holdMs = new QSpinBox(this);
@@ -208,8 +202,7 @@ void SettingsDialog::buildStickTab() {
 // Tab 3: Button mappings
 // ============================================================
 static void addMappingRow(QFormLayout* form, const QStringList& buttons,
-                          QMap<QString, QComboBox*>& store,
-                          SettingsDialog* dlg,
+                          QMap<QString, QComboBox*>& store, SettingsDialog* dlg,
                           const std::function<void(QComboBox*, const QString&)>& filler) {
     for (const QString& b : buttons) {
         auto* combo = new QComboBox(form->parentWidget());
@@ -227,7 +220,7 @@ void SettingsDialog::buildMappingTab() {
     auto* dg = new QFormLayout(directGroup);
     // Direct mapping applies to all 16 logical buttons.
     addMappingRow(dg, kAllButtons, m_directCombos, this,
-        [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
+                  [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
     outer->addWidget(directGroup);
 
     auto* l3Group = new QGroupBox(QStringLiteral("L3 层（按住 L3）"), this);
@@ -236,7 +229,7 @@ void SettingsDialog::buildMappingTab() {
     QStringList l3Btns = kAllButtons;
     l3Btns.removeAll("L3");
     addMappingRow(l3g, l3Btns, m_l3Combos, this,
-        [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
+                  [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
     outer->addWidget(l3Group);
 
     auto* rtGroup = new QGroupBox(QStringLiteral("RT 层（按住 RT）"), this);
@@ -244,7 +237,7 @@ void SettingsDialog::buildMappingTab() {
     QStringList rtBtns = kAllButtons;
     rtBtns.removeAll("RT");
     addMappingRow(rtg, rtBtns, m_rtCombos, this,
-        [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
+                  [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
     outer->addWidget(rtGroup);
 
     outer->addStretch();
@@ -275,7 +268,8 @@ void SettingsDialog::buildAutoSwitchTab() {
 
     auto* info = new QLabel(
         QStringLiteral("规则：仅在<b>鼠标模式</b>下检测；检测到玩游戏时自动切到<b>默认模式</b>。"
-                       "<b>默认模式</b>不会被自动改变，需手动切回鼠标模式。"), this);
+                       "<b>默认模式</b>不会被自动改变，需手动切回鼠标模式。"),
+        this);
     info->setWordWrap(true);
     form->addRow(info);
 
@@ -356,9 +350,12 @@ void SettingsDialog::loadValues() {
     m_sensX->setValue(m_config->value("mouse_mode.left_stick.sensitivity_x", 1.0).toDouble());
     m_sensY->setValue(m_config->value("mouse_mode.left_stick.sensitivity_y", 1.0).toDouble());
     m_leftDeadzone->setValue(m_config->value("mouse_mode.left_stick.deadzone", 0.15).toDouble());
-    m_acceleration->setChecked(m_config->value("mouse_mode.left_stick.acceleration", true).toBool());
-    m_scrollV->setValue(m_config->value("mouse_mode.right_stick.scroll_speed_vertical", 1.0).toDouble());
-    m_scrollH->setValue(m_config->value("mouse_mode.right_stick.scroll_speed_horizontal", 1.0).toDouble());
+    m_acceleration->setChecked(
+        m_config->value("mouse_mode.left_stick.acceleration", true).toBool());
+    m_scrollV->setValue(
+        m_config->value("mouse_mode.right_stick.scroll_speed_vertical", 1.0).toDouble());
+    m_scrollH->setValue(
+        m_config->value("mouse_mode.right_stick.scroll_speed_horizontal", 1.0).toDouble());
     m_rightDeadzone->setValue(m_config->value("mouse_mode.right_stick.deadzone", 0.15).toDouble());
 
     // Mappings - direct
@@ -381,26 +378,29 @@ void SettingsDialog::loadValues() {
     // Auto-switch
     m_asEnabled->setChecked(m_config->value("auto_switch.enabled", false).toBool());
     m_asInterval->setValue(m_config->value("auto_switch.poll_interval_seconds", 10).toInt());
-    m_procEnabled->setChecked(m_config->value("auto_switch.detection.process_list_enabled", true).toBool());
-    m_procNames->setPlainText(
-        ([&]() {
-            QVariant v = m_config->value("auto_switch.detection.process_names");
-            QStringList out;
-            if (v.canConvert<QVariantList>()) {
-                for (const QVariant& item : v.toList()) {
-                    if (!item.toString().trimmed().isEmpty())
-                        out << item.toString().trimmed();
-                }
+    m_procEnabled->setChecked(
+        m_config->value("auto_switch.detection.process_list_enabled", true).toBool());
+    m_procNames->setPlainText(([&]() {
+        QVariant v = m_config->value("auto_switch.detection.process_names");
+        QStringList out;
+        if (v.canConvert<QVariantList>()) {
+            for (const QVariant& item : v.toList()) {
+                if (!item.toString().trimmed().isEmpty())
+                    out << item.toString().trimmed();
             }
-            return out.join("\n");
-        })());
-    m_fsEnabled->setChecked(m_config->value("auto_switch.detection.fullscreen_enabled", false).toBool());
+        }
+        return out.join("\n");
+    })());
+    m_fsEnabled->setChecked(
+        m_config->value("auto_switch.detection.fullscreen_enabled", false).toBool());
     m_cpuEnabled->setChecked(m_config->value("auto_switch.detection.cpu_enabled", false).toBool());
     m_cpuThreshold->setValue(m_config->value("auto_switch.detection.cpu_threshold", 50).toDouble());
-    m_cpuSustained->setValue(m_config->value("auto_switch.detection.cpu_sustained_seconds", 30).toInt());
+    m_cpuSustained->setValue(
+        m_config->value("auto_switch.detection.cpu_sustained_seconds", 30).toInt());
     m_gpuEnabled->setChecked(m_config->value("auto_switch.detection.gpu_enabled", false).toBool());
     m_gpuThreshold->setValue(m_config->value("auto_switch.detection.gpu_threshold", 50).toDouble());
-    m_gpuSustained->setValue(m_config->value("auto_switch.detection.gpu_sustained_seconds", 30).toInt());
+    m_gpuSustained->setValue(
+        m_config->value("auto_switch.detection.gpu_sustained_seconds", 30).toInt());
 }
 
 void SettingsDialog::saveValues() {
@@ -456,7 +456,8 @@ void SettingsDialog::saveValues() {
     QStringList names;
     for (const QString& line : m_procNames->toPlainText().split('\n', Qt::SkipEmptyParts)) {
         QString t = line.trimmed();
-        if (!t.isEmpty()) names << t;
+        if (!t.isEmpty())
+            names << t;
     }
     m_config->setValue("auto_switch.detection.process_names", names);
     m_config->setValue("auto_switch.detection.fullscreen_enabled", m_fsEnabled->isChecked());

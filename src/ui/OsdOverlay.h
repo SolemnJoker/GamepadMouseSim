@@ -1,25 +1,25 @@
 #pragma once
 
-#include <QWidget>
+#include "core/Types.h"
+#include <QPixmap>
 #include <QPropertyAnimation>
 #include <QTimer>
-#include <QPixmap>
-#include "core/Types.h"
+#include <QWidget>
 
 class OsdOverlay : public QWidget {
     Q_OBJECT
     Q_PROPERTY(float windowOpacity READ windowOpacity WRITE setWindowOpacity)
-public:
+  public:
     explicit OsdOverlay(QWidget* parent = nullptr);
 
-public slots:
+  public slots:
     void showModeChange(int controllerIndex, GamepadMode mode);
     void showHelp();
 
-protected:
+  protected:
     void paintEvent(QPaintEvent* event) override;
 
-private:
+  private:
     void showMessage(const QString& text, int durationMs = 2000, int width = 300, int height = 60);
 
     bool m_isHelpMode = false;

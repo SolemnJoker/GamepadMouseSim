@@ -5,7 +5,7 @@
 
 class ProcessDetector : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit ProcessDetector(QObject* parent = nullptr);
     bool isTargetRunning(const QStringList& processNames);
 };

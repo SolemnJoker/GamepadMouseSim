@@ -1,15 +1,15 @@
 #pragma once
 
-#include <QtTest>
-#include <QSignalSpy>
-#include <QTemporaryFile>
+#include "core/Config.h"
 #include <QJsonDocument>
 #include <QJsonObject>
-#include "core/Config.h"
+#include <QSignalSpy>
+#include <QTemporaryFile>
+#include <QtTest>
 
 class TestConfigAutostart : public QObject {
     Q_OBJECT
-private slots:
+  private slots:
     void init();
     void cleanup();
 
@@ -18,7 +18,7 @@ private slots:
     void reloadReReadsValue();
     void nestedPathRoundTrip();
 
-private:
+  private:
     QTemporaryFile* m_tmpFile = nullptr;
     Config* m_config = nullptr;
 };

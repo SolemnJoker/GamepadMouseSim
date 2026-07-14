@@ -2,28 +2,28 @@
 #include "Config.h"
 #include "ProcessDetector.h"
 #include "SysUsage.h"
-#include <windows.h>
-#include <QDebug>
 #include <QDateTime>
+#include <QDebug>
+#include <windows.h>
 
 GameDetector::GameDetector(Config* config, QObject* parent)
-    : QObject(parent)
-    , m_config(config)
-    , m_sys(new SysUsage(this))
-    , m_procDetector(new ProcessDetector(this))
-{
+    : QObject(parent), m_config(config), m_sys(new SysUsage(this)),
+      m_procDetector(new ProcessDetector(this)) {
     loadCachedConfig();
 }
 
 void GameDetector::loadCachedConfig() {
-    m_processEnabled   = m_config->value("auto_switch.detection.process_list_enabled", true).toBool();
-    m_fullscreenEnabled = m_config->value("auto_switch.detection.fullscreen_enabled", false).toBool();
-    m_cpuEnabled       = m_config->value("auto_switch.detection.cpu_enabled", false).toBool();
-    m_cpuThreshold     = m_config->value("auto_switch.detection.cpu_threshold", 50).toDouble();
-    m_cpuSustainedSec  = m_config->value("auto_switch.detection.cpu_sustained_seconds", 30).toDouble();
-    m_gpuEnabled       = m_config->value("auto_switch.detection.gpu_enabled", false).toBool();
-    m_gpuThreshold     = m_config->value("auto_switch.detection.gpu_threshold", 50).toDouble();
-    m_gpuSustainedSec  = m_config->value("auto_switch.detection.gpu_sustained_seconds", 30).toDouble();
+    m_processEnabled = m_config->value("auto_switch.detection.process_list_enabled", true).toBool();
+    m_fullscreenEnabled =
+        m_config->value("auto_switch.detection.fullscreen_enabled", false).toBool();
+    m_cpuEnabled = m_config->value("auto_switch.detection.cpu_enabled", false).toBool();
+    m_cpuThreshold = m_config->value("auto_switch.detection.cpu_threshold", 50).toDouble();
+    m_cpuSustainedSec =
+        m_config->value("auto_switch.detection.cpu_sustained_seconds", 30).toDouble();
+    m_gpuEnabled = m_config->value("auto_switch.detection.gpu_enabled", false).toBool();
+    m_gpuThreshold = m_config->value("auto_switch.detection.gpu_threshold", 50).toDouble();
+    m_gpuSustainedSec =
+        m_config->value("auto_switch.detection.gpu_sustained_seconds", 30).toDouble();
 
     // Parse process names from QVariantList
     m_processNames.clear();
@@ -31,7 +31,8 @@ void GameDetector::loadCachedConfig() {
     if (v.canConvert<QVariantList>()) {
         for (const QVariant& item : v.toList()) {
             QString t = item.toString().trimmed();
-            if (!t.isEmpty()) m_processNames << t;
+            if (!t.isEmpty())
+                m_processNames << t;
         }
     }
 }
@@ -45,34 +46,42 @@ void GameDetector::reloadConfig() {
 
 bool GameDetector::isFullscreenForeground() {
     HWND hwnd = GetForegroundWindow();
-    if (!hwnd) return false;
+    if (!hwnd)
+        return false;
 
     // Exclude shell / taskbar windows.
     wchar_t cls[256] = {};
     if (GetClassNameW(hwnd, cls, 256) > 0) {
         QString name = QString::fromWCharArray(cls);
-        if (name.compare("Shell_TrayWnd", Qt::CaseInsensitive) == 0) return false;   // taskbar
-        if (name.compare("Progman",       Qt::CaseInsensitive) == 0) return false;   // desktop
-        if (name.compare("WorkerW",       Qt::CaseInsensitive) == 0) return false;   // desktop
+        if (name.compare("Shell_TrayWnd", Qt::CaseInsensitive) == 0)
+            return false; // taskbar
+        if (name.compare("Progman", Qt::CaseInsensitive) == 0)
+            return false; // desktop
+        if (name.compare("WorkerW", Qt::CaseInsensitive) == 0)
+            return false; // desktop
     }
 
     // Must be visible & not iconified.
-    if (!IsWindowVisible(hwnd)) return false;
-    if (IsIconic(hwnd)) return false;
+    if (!IsWindowVisible(hwnd))
+        return false;
+    if (IsIconic(hwnd))
+        return false;
 
     RECT rc;
-    if (!GetWindowRect(hwnd, &rc)) return false;
+    if (!GetWindowRect(hwnd, &rc))
+        return false;
 
     // Compare against the union of all monitors (a window spanning the whole
     // primary screen counts). Use the nearest monitor's work vs screen area.
     HMONITOR hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
-    if (!GetMonitorInfoW(hmon, &mi)) return false;
+    if (!GetMonitorInfoW(hmon, &mi))
+        return false;
 
     LONG w = rc.right - rc.left;
     LONG h = rc.bottom - rc.top;
-    LONG sw = mi.rcMonitor.right  - mi.rcMonitor.left;
+    LONG sw = mi.rcMonitor.right - mi.rcMonitor.left;
     LONG sh = mi.rcMonitor.bottom - mi.rcMonitor.top;
 
     // Allow a small tolerance for border/offset rounding.
@@ -113,8 +122,10 @@ GameDetector::Result GameDetector::detect(qint64 nowMs) {
     double dtMs = 0.0;
     if (m_lastSampleMs > 0) {
         dtMs = static_cast<double>(nowMs - m_lastSampleMs);
-        if (dtMs < 0) dtMs = 0;
-        if (dtMs > 60000) dtMs = 60000;
+        if (dtMs < 0)
+            dtMs = 0;
+        if (dtMs > 60000)
+            dtMs = 60000;
     }
     m_lastSampleMs = nowMs;
 

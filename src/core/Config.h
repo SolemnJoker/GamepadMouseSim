@@ -1,15 +1,15 @@
 #pragma once
 
-#include <QObject>
+#include <QFileSystemWatcher>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QFileSystemWatcher>
+#include <QObject>
 #include <QTimer>
 #include <QVariant>
 
 class Config : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit Config(QObject* parent = nullptr);
 
     bool load(const QString& path);
@@ -21,13 +21,13 @@ public:
     void beginBatch();
     void endBatch();
 
-signals:
+  signals:
     void configChanged();
 
-private slots:
+  private slots:
     void onFileChanged(const QString& path);
 
-private:
+  private:
     QVariant getNestedValue(const QJsonObject& obj, const QStringList& keys) const;
     void setNestedValue(QJsonObject& obj, const QStringList& keys, const QVariant& value);
 

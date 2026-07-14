@@ -1,11 +1,9 @@
 #include "Config.h"
-#include <QFile>
-#include <QDir>
 #include <QCoreApplication>
+#include <QDir>
+#include <QFile>
 
-Config::Config(QObject* parent)
-    : QObject(parent)
-{
+Config::Config(QObject* parent) : QObject(parent) {
     m_debounceTimer.setSingleShot(true);
     m_debounceTimer.setInterval(300);
     connect(&m_debounceTimer, &QTimer::timeout, this, &Config::configChanged);
@@ -89,8 +87,10 @@ void Config::onFileChanged(const QString& path) {
 }
 
 QVariant Config::getNestedValue(const QJsonObject& obj, const QStringList& keys) const {
-    if (keys.isEmpty()) return QVariant();
-    if (keys.size() == 1) return obj.value(keys.first()).toVariant();
+    if (keys.isEmpty())
+        return QVariant();
+    if (keys.size() == 1)
+        return obj.value(keys.first()).toVariant();
 
     QJsonObject child = obj.value(keys.first()).toObject();
     return getNestedValue(child, keys.mid(1));

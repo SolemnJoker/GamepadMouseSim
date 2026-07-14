@@ -1,18 +1,18 @@
 #pragma once
 
-#include <QDialog>
-#include <QTabWidget>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
+#include "core/Types.h"
 #include <QCheckBox>
 #include <QComboBox>
-#include <QLineEdit>
-#include <QPlainTextEdit>
-#include <QListWidget>
+#include <QDialog>
+#include <QDoubleSpinBox>
 #include <QLabel>
+#include <QLineEdit>
+#include <QListWidget>
 #include <QMap>
+#include <QPlainTextEdit>
+#include <QSpinBox>
 #include <QStringList>
-#include "core/Types.h"
+#include <QTabWidget>
 
 class Config;
 
@@ -20,13 +20,13 @@ class Config;
 // triggers the existing hot-reload pipeline (QFileSystemWatcher -> configChanged).
 class SettingsDialog : public QDialog {
     Q_OBJECT
-public:
+  public:
     explicit SettingsDialog(Config* config, QWidget* parent = nullptr);
 
-private slots:
+  private slots:
     void accept() override;
 
-private:
+  private:
     void buildGeneralTab();
     void buildStickTab();
     void buildMappingTab();
@@ -44,18 +44,18 @@ private:
     QTabWidget* m_tabs = nullptr;
 
     // --- General tab ---
-    QSpinBox*      m_lockoutSec = nullptr;
-    QListWidget*   m_comboButtons = nullptr;     // multi-select of 14 buttons
-    QSpinBox*      m_holdMs = nullptr;
-    QCheckBox*     m_osdEnabled = nullptr;
-    QSpinBox*      m_osdDuration = nullptr;
-    QCheckBox*     m_autostart = nullptr;
+    QSpinBox* m_lockoutSec = nullptr;
+    QListWidget* m_comboButtons = nullptr; // multi-select of 14 buttons
+    QSpinBox* m_holdMs = nullptr;
+    QCheckBox* m_osdEnabled = nullptr;
+    QSpinBox* m_osdDuration = nullptr;
+    QCheckBox* m_autostart = nullptr;
 
     // --- Stick tab ---
     QDoubleSpinBox* m_sensX = nullptr;
     QDoubleSpinBox* m_sensY = nullptr;
     QDoubleSpinBox* m_leftDeadzone = nullptr;
-    QCheckBox*      m_acceleration = nullptr;
+    QCheckBox* m_acceleration = nullptr;
     QDoubleSpinBox* m_scrollV = nullptr;
     QDoubleSpinBox* m_scrollH = nullptr;
     QDoubleSpinBox* m_rightDeadzone = nullptr;
@@ -67,16 +67,16 @@ private:
     QMap<QString, QComboBox*> m_rtCombos;
 
     // --- Auto-switch tab ---
-    QCheckBox*     m_asEnabled = nullptr;
-    QSpinBox*      m_asInterval = nullptr;
-    QCheckBox*     m_procEnabled = nullptr;
+    QCheckBox* m_asEnabled = nullptr;
+    QSpinBox* m_asInterval = nullptr;
+    QCheckBox* m_procEnabled = nullptr;
     QPlainTextEdit* m_procNames = nullptr;
-    QCheckBox*     m_fsEnabled = nullptr;
-    QCheckBox*     m_cpuEnabled = nullptr;
+    QCheckBox* m_fsEnabled = nullptr;
+    QCheckBox* m_cpuEnabled = nullptr;
     QDoubleSpinBox* m_cpuThreshold = nullptr;
-    QSpinBox*      m_cpuSustained = nullptr;
-    QCheckBox*     m_gpuEnabled = nullptr;
+    QSpinBox* m_cpuSustained = nullptr;
+    QCheckBox* m_gpuEnabled = nullptr;
     QDoubleSpinBox* m_gpuThreshold = nullptr;
-    QSpinBox*      m_gpuSustained = nullptr;
-    QLabel*        m_gpuHint = nullptr;
+    QSpinBox* m_gpuSustained = nullptr;
+    QLabel* m_gpuHint = nullptr;
 };

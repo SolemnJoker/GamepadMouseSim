@@ -1,13 +1,10 @@
 #include "OsdOverlay.h"
+#include <QDebug>
+#include <QGuiApplication>
 #include <QPainter>
 #include <QScreen>
-#include <QGuiApplication>
-#include <QDebug>
 
-OsdOverlay::OsdOverlay(QWidget* parent)
-    : QWidget(parent)
-    , m_fadeAnimation(this, "windowOpacity")
-{
+OsdOverlay::OsdOverlay(QWidget* parent) : QWidget(parent), m_fadeAnimation(this, "windowOpacity") {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
     setFixedSize(300, 60);
@@ -34,8 +31,9 @@ OsdOverlay::OsdOverlay(QWidget* parent)
 }
 
 void OsdOverlay::showModeChange(int controllerIndex, GamepadMode mode) {
-    QString text = QString("Pad%1: %2").arg(controllerIndex + 1)
-                   .arg(mode == GamepadMode::Mouse ? "Mouse" : "Default");
+    QString text = QString("Pad%1: %2")
+                       .arg(controllerIndex + 1)
+                       .arg(mode == GamepadMode::Mouse ? "Mouse" : "Default");
     qDebug() << "OSD showing:" << text;
     showMessage(text);
 }
@@ -49,7 +47,8 @@ void OsdOverlay::showHelp() {
     }
 
     QScreen* screen = QGuiApplication::primaryScreen();
-    if (!screen) return;
+    if (!screen)
+        return;
     QRect sg = screen->availableGeometry();
 
     // Scale the 1920x1080 help image to fit 85% of screen, preserving aspect ratio

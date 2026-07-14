@@ -19,10 +19,10 @@ class Config;
 // spikes don't trigger a switch.
 class GameDetector : public QObject {
     Q_OBJECT
-public:
+  public:
     struct Result {
-        bool   isPlaying = false;
-        QString reason;     // human-readable hit reason, empty if not playing
+        bool isPlaying = false;
+        QString reason; // human-readable hit reason, empty if not playing
     };
 
     explicit GameDetector(Config* config, QObject* parent = nullptr);
@@ -33,7 +33,7 @@ public:
     // Called on config change to reset thresholds/lists.
     void reloadConfig();
 
-private:
+  private:
     // Static helpers
     static bool isFullscreenForeground();
 
@@ -51,15 +51,15 @@ private:
     class ProcessDetector* m_procDetector = nullptr;
 
     // Cached config values (reloaded on reloadConfig())
-    bool        m_processEnabled = true;
+    bool m_processEnabled = true;
     QStringList m_processNames;
-    bool        m_fullscreenEnabled = false;
-    bool        m_cpuEnabled = false;
-    double      m_cpuThreshold = 50.0;
-    double      m_cpuSustainedSec = 30.0;
-    bool        m_gpuEnabled = false;
-    double      m_gpuThreshold = 50.0;
-    double      m_gpuSustainedSec = 30.0;
+    bool m_fullscreenEnabled = false;
+    bool m_cpuEnabled = false;
+    double m_cpuThreshold = 50.0;
+    double m_cpuSustainedSec = 30.0;
+    bool m_gpuEnabled = false;
+    double m_gpuThreshold = 50.0;
+    double m_gpuSustainedSec = 30.0;
 
     void loadCachedConfig();
 };

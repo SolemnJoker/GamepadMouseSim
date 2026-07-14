@@ -1,30 +1,27 @@
 #include "SysUsage.h"
-#include <windows.h>
-#include <dxgi.h>
 #include <QDebug>
+#include <dxgi.h>
+#include <windows.h>
 
 // IID for IDXGIFactory1 (defined by MinGW-w64 in dxgi.h; define if missing).
 #ifndef IID_IDXGIFactory1
-DEFINE_GUID(IID_IDXGIFactory1,
-    0x770aae78, 0x972d, 0x4e11, 0xa2, 0xe6, 0x08, 0xd4, 0xa4, 0x78, 0x03, 0xef);
+DEFINE_GUID(IID_IDXGIFactory1, 0x770aae78, 0x972d, 0x4e11, 0xa2, 0xe6, 0x08, 0xd4, 0xa4, 0x78, 0x03,
+            0xef);
 #endif
 
 // ---- D3DKMT forward decls (MinGW may not ship d3dkmthk.h) ----
 extern "C" {
-typedef NTSTATUS (WINAPI *PFN_D3DKMTQueryStatistics)(void*);
+typedef NTSTATUS(WINAPI* PFN_D3DKMTQueryStatistics)(void*);
 }
 
 // =====================================================================
 // CPU usage via GetSystemTimes
 // =====================================================================
-SysUsage::SysUsage(QObject* parent)
-    : QObject(parent)
-{
+SysUsage::SysUsage(QObject* parent) : QObject(parent) {
     m_gpuReady = discoverAdapter();
 }
 
-SysUsage::~SysUsage() {
-}
+SysUsage::~SysUsage() {}
 
 double SysUsage::cpuUsage() {
     FILETIME idleTime, kernelTime, userTime;
@@ -32,29 +29,32 @@ double SysUsage::cpuUsage() {
         return -1.0;
     }
 
-    quint64 idle   = (static_cast<quint64>(idleTime.dwHighDateTime) << 32)   | idleTime.dwLowDateTime;
-    quint64 kernel = (static_cast<quint64>(kernelTime.dwHighDateTime) << 32) | kernelTime.dwLowDateTime;
-    quint64 user   = (static_cast<quint64>(userTime.dwHighDateTime) << 32)   | userTime.dwLowDateTime;
+    quint64 idle = (static_cast<quint64>(idleTime.dwHighDateTime) << 32) | idleTime.dwLowDateTime;
+    quint64 kernel =
+        (static_cast<quint64>(kernelTime.dwHighDateTime) << 32) | kernelTime.dwLowDateTime;
+    quint64 user = (static_cast<quint64>(userTime.dwHighDateTime) << 32) | userTime.dwLowDateTime;
 
     if (m_cpuFirst) {
         m_cpuFirst = false;
         m_cpuIdlePrev = idle;
         m_cpuKernelPrev = kernel;
         m_cpuUserPrev = user;
-        return -1.0;  // need two samples
+        return -1.0; // need two samples
     }
 
-    quint64 idleDelta   = idle   - m_cpuIdlePrev;
+    quint64 idleDelta = idle - m_cpuIdlePrev;
     quint64 kernelDelta = kernel - m_cpuKernelPrev;
-    quint64 userDelta   = user   - m_cpuUserPrev;
+    quint64 userDelta = user - m_cpuUserPrev;
 
     // kernel includes idle, so total busy = (kernel + user) - idle
     quint64 totalDelta = kernelDelta + userDelta;
     double usage = 0.0;
     if (totalDelta > 0) {
         usage = (1.0 - static_cast<double>(idleDelta) / static_cast<double>(totalDelta)) * 100.0;
-        if (usage < 0.0) usage = 0.0;
-        if (usage > 100.0) usage = 100.0;
+        if (usage < 0.0)
+            usage = 0.0;
+        if (usage > 100.0)
+            usage = 100.0;
     }
 
     m_cpuIdlePrev = idle;
@@ -82,8 +82,8 @@ double SysUsage::cpuUsage() {
 // =====================================================================
 
 #if defined(_WIN64)
-static constexpr int kNodeIdOffset = 16;        // ULONG at offset 16
-static constexpr int kRunningTimeOffset = 24;    // ULONGLONG at offset 24
+static constexpr int kNodeIdOffset = 16;      // ULONG at offset 16
+static constexpr int kRunningTimeOffset = 24; // ULONGLONG at offset 24
 #else
 static constexpr int kNodeIdOffset = 16;
 static constexpr int kRunningTimeOffset = 20;
@@ -92,8 +92,7 @@ static constexpr int kRunningTimeOffset = 20;
 bool SysUsage::discoverAdapter() {
     // Enumerate DXGI adapters to find the first hardware adapter.
     IDXGIFactory1* factory = nullptr;
-    if (FAILED(CreateDXGIFactory1(IID_IDXGIFactory1,
-                                  reinterpret_cast<void**>(&factory)))) {
+    if (FAILED(CreateDXGIFactory1(IID_IDXGIFactory1, reinterpret_cast<void**>(&factory)))) {
         return false;
     }
 
@@ -114,16 +113,19 @@ bool SysUsage::discoverAdapter() {
         adapter->Release();
     }
     factory->Release();
-    if (!found) return false;
+    if (!found)
+        return false;
 
-    m_adapterLuidLow  = primaryLuid.LowPart;
+    m_adapterLuidLow = primaryLuid.LowPart;
     m_adapterLuidHigh = primaryLuid.HighPart;
 
     // Get the D3DKMTQueryStatistics function pointer.
     HMODULE gdi32 = GetModuleHandleW(L"gdi32.dll");
-    if (!gdi32) return false;
+    if (!gdi32)
+        return false;
     m_pQS = reinterpret_cast<void*>(GetProcAddress(gdi32, "D3DKMTQueryStatistics"));
-    if (!m_pQS) return false;
+    if (!m_pQS)
+        return false;
     auto pQS = reinterpret_cast<PFN_D3DKMTQueryStatistics>(m_pQS);
 
     // Probe node count by querying until failure.
@@ -135,29 +137,32 @@ bool SysUsage::discoverAdapter() {
         ZeroMemory(buf, kBufSize);
 
         // Fill input fields.
-        *reinterpret_cast<ULONG*>(buf + 0)  = 5;  // D3DKMT_QUERYSTATISTICS_NODE
-        *reinterpret_cast<LUID*>(buf + 4)   = primaryLuid;
-        *reinterpret_cast<ULONG*>(buf + 12)  = 0;  // hProcess
+        *reinterpret_cast<ULONG*>(buf + 0) = 5; // D3DKMT_QUERYSTATISTICS_NODE
+        *reinterpret_cast<LUID*>(buf + 4) = primaryLuid;
+        *reinterpret_cast<ULONG*>(buf + 12) = 0; // hProcess
         *reinterpret_cast<ULONG*>(buf + kNodeIdOffset) = static_cast<ULONG>(n);
 
         NTSTATUS st = pQS(buf);
-        if (st != 0) break;
+        if (st != 0)
+            break;
         nodes = n + 1;
     }
 
-    if (nodes <= 0) return false;
+    if (nodes <= 0)
+        return false;
     m_nodeCount = nodes;
     qDebug() << "SysUsage: GPU adapter found, node count =" << nodes;
     return true;
 }
 
 double SysUsage::gpuUsage() {
-    if (!m_gpuReady || m_nodeCount <= 0 || !m_pQS) return -1.0;
+    if (!m_gpuReady || m_nodeCount <= 0 || !m_pQS)
+        return -1.0;
 
     auto pQS = reinterpret_cast<PFN_D3DKMTQueryStatistics>(m_pQS);
 
     LUID luid;
-    luid.LowPart  = m_adapterLuidLow;
+    luid.LowPart = m_adapterLuidLow;
     luid.HighPart = m_adapterLuidHigh;
 
     static constexpr size_t kBufSize = 4096;
@@ -167,13 +172,14 @@ double SysUsage::gpuUsage() {
     for (int n = 0; n < m_nodeCount; ++n) {
         ZeroMemory(buf, kBufSize);
 
-        *reinterpret_cast<ULONG*>(buf + 0)  = 5;
-        *reinterpret_cast<LUID*>(buf + 4)   = luid;
-        *reinterpret_cast<ULONG*>(buf + 12)  = 0;
+        *reinterpret_cast<ULONG*>(buf + 0) = 5;
+        *reinterpret_cast<LUID*>(buf + 4) = luid;
+        *reinterpret_cast<ULONG*>(buf + 12) = 0;
         *reinterpret_cast<ULONG*>(buf + kNodeIdOffset) = static_cast<ULONG>(n);
 
         NTSTATUS st = pQS(buf);
-        if (st != 0) break;
+        if (st != 0)
+            break;
 
         ULONGLONG runningTime = 0;
         memcpy(&runningTime, buf + kRunningTimeOffset, sizeof(ULONGLONG));
@@ -203,8 +209,10 @@ double SysUsage::gpuUsage() {
         // Normalize across nodes.
         double busy100ns = static_cast<double>(runDelta) / static_cast<double>(m_nodeCount);
         usage = busy100ns / wall100ns * 100.0;
-        if (usage < 0.0) usage = 0.0;
-        if (usage > 100.0) usage = 100.0;
+        if (usage < 0.0)
+            usage = 0.0;
+        if (usage > 100.0)
+            usage = 100.0;
     }
 
     m_gpuRunningPrev = runningSum;

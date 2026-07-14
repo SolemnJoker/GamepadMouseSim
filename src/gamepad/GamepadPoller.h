@@ -1,32 +1,34 @@
 #pragma once
 
-#include <array>
-#include <QObject>
-#include <QThread>
 #include "core/Types.h"
 #include "win/XInputWrapper.h"
+#include <QObject>
+#include <QThread>
+#include <array>
 
 class GamepadPoller : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit GamepadPoller(QObject* parent = nullptr);
     ~GamepadPoller();
 
     void start();
     void stop();
 
-signals:
+  signals:
     void gamepadStateChanged(int controllerIndex, const GamepadState& state);
     void gamepadConnected(int controllerIndex);
     void gamepadDisconnected(int controllerIndex);
 
-private:
+  private:
     class PollThread : public QThread {
-    public:
+      public:
         PollThread(GamepadPoller* parent);
-    protected:
+
+      protected:
         void run() override;
-    private:
+
+      private:
         GamepadPoller* m_parent;
     };
 

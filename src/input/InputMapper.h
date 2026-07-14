@@ -1,26 +1,26 @@
 #pragma once
 
-#include <QObject>
-#include "core/Types.h"
-#include "MouseMapper.h"
 #include "KeyboardMapper.h"
+#include "MouseMapper.h"
+#include "core/Types.h"
+#include <QObject>
 
 class Config;
 
 class InputMapper : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit InputMapper(Config* config, int controllerIndex, QObject* parent = nullptr);
 
-public slots:
+  public slots:
     void onGamepadStateChanged(int controllerIndex, const GamepadState& state);
     void onModeChanged(GamepadMode mode);
     void onConfigChanged();
 
-signals:
+  signals:
     void showHelpRequested();
 
-private:
+  private:
     Config* m_config;
     int m_controllerIndex;
     MouseMapper m_mouseMapper;

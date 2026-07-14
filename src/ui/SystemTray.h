@@ -1,14 +1,14 @@
 #pragma once
 
+#include "core/Types.h"
+#include <QMenu>
 #include <QObject>
 #include <QSystemTrayIcon>
-#include <QMenu>
 #include <array>
-#include "core/Types.h"
 
 class SystemTray : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit SystemTray(QObject* parent = nullptr);
 
     void show();
@@ -16,20 +16,20 @@ public:
 
     QIcon trayIcon() const { return m_trayIcon.icon(); }
 
-public slots:
+  public slots:
     void onModeChanged(int controllerIndex, GamepadMode mode);
 
-signals:
+  signals:
     void switchModeRequested();
     void lockModeRequested();
     void pauseRequested();
     void exitRequested();
     void settingsRequested();
 
-private slots:
+  private slots:
     void onActivated(QSystemTrayIcon::ActivationReason reason);
 
-private:
+  private:
     void updateIcon(GamepadMode mode);
     void updateTooltip();
     static QIcon renderSvg(const QString& path, int size);

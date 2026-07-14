@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Types.h"
 #include <QObject>
 #include <QTimer>
 #include <array>
-#include "Types.h"
 
 class Config;
 class ModeManager;
@@ -20,22 +20,21 @@ class GameDetector;
 //   2.2b Boot defaults to Mouse mode (handled by ModeManager).
 class AutoModeController : public QObject {
     Q_OBJECT
-public:
-    explicit AutoModeController(Config* config,
-                                std::array<ModeManager*, kMaxGamepads> modeManagers,
+  public:
+    explicit AutoModeController(Config* config, std::array<ModeManager*, kMaxGamepads> modeManagers,
                                 QObject* parent = nullptr);
     ~AutoModeController();
 
     void start();
     void stop();
 
-public slots:
+  public slots:
     void onConfigChanged();
 
-private slots:
+  private slots:
     void onTimeout();
 
-private:
+  private:
     void loadConfig();
     void applyInterval();
 
@@ -45,5 +44,5 @@ private:
     QTimer m_timer;
 
     bool m_enabled = false;
-    int  m_intervalSec = 10;
+    int m_intervalSec = 10;
 };

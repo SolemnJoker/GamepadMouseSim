@@ -2,13 +2,11 @@
 #include <QDebug>
 
 ComboKeyDetector::ComboKeyDetector(int controllerIndex, QObject* parent)
-    : QObject(parent)
-    , m_controllerIndex(controllerIndex)
-{
-}
+    : QObject(parent), m_controllerIndex(controllerIndex) {}
 
 void ComboKeyDetector::onGamepadState(int controllerIndex, const GamepadState& state) {
-    if (controllerIndex != m_controllerIndex) return;
+    if (controllerIndex != m_controllerIndex)
+        return;
     if (!state.connected) {
         m_holding = false;
         return;

@@ -1,11 +1,8 @@
 #include "GamepadPoller.h"
-#include <QThread>
 #include <QDebug>
+#include <QThread>
 
-GamepadPoller::PollThread::PollThread(GamepadPoller* parent)
-    : m_parent(parent)
-{
-}
+GamepadPoller::PollThread::PollThread(GamepadPoller* parent) : m_parent(parent) {}
 
 void GamepadPoller::PollThread::run() {
     while (!isInterruptionRequested()) {
@@ -14,11 +11,7 @@ void GamepadPoller::PollThread::run() {
     }
 }
 
-GamepadPoller::GamepadPoller(QObject* parent)
-    : QObject(parent)
-    , m_thread(this)
-{
-}
+GamepadPoller::GamepadPoller(QObject* parent) : QObject(parent), m_thread(this) {}
 
 GamepadPoller::~GamepadPoller() {
     stop();
@@ -42,7 +35,8 @@ static float applyDeadzone(float x, float y, float deadzone, float& outX, float&
         return 0.0f;
     }
     float norm = (mag - deadzone) / (1.0f - deadzone);
-    if (norm > 1.0f) norm = 1.0f;
+    if (norm > 1.0f)
+        norm = 1.0f;
     float nx = x / mag;
     float ny = y / mag;
     outX = nx * norm;

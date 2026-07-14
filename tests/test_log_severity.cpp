@@ -4,7 +4,8 @@
 
 TestLogSeverity* TestLogSeverity::s_instance = nullptr;
 
-void TestLogSeverity::messageHandler(QtMsgType type, const QMessageLogContext& ctx, const QString& msg) {
+void TestLogSeverity::messageHandler(QtMsgType type, const QMessageLogContext& ctx,
+                                     const QString& msg) {
     Q_UNUSED(ctx);
     if (s_instance) {
         s_instance->m_captured += QString::number(type) + ":" + msg + "\n";
@@ -24,14 +25,16 @@ void TestLogSeverity::cleanup() {
 
 void TestLogSeverity::qWarning_capturesMessage() {
     qWarning() << "No config file found, using defaults";
-    QVERIFY2(m_captured.contains("No config file found"),
-             qPrintable(QString("Expected 'No config file found' in capture, got: %1").arg(m_captured)));
+    QVERIFY2(
+        m_captured.contains("No config file found"),
+        qPrintable(QString("Expected 'No config file found' in capture, got: %1").arg(m_captured)));
 }
 
 void TestLogSeverity::qCritical_capturesMessage() {
     qCritical() << "Failed to initialize";
-    QVERIFY2(m_captured.contains("Failed to initialize"),
-             qPrintable(QString("Expected 'Failed to initialize' in capture, got: %1").arg(m_captured)));
+    QVERIFY2(
+        m_captured.contains("Failed to initialize"),
+        qPrintable(QString("Expected 'Failed to initialize' in capture, got: %1").arg(m_captured)));
 }
 
 void TestLogSeverity::severityLevels_correctlyLabelled() {

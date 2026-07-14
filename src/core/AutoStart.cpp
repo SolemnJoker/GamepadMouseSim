@@ -1,14 +1,14 @@
 #include "AutoStart.h"
-#include <QSettings>
 #include <QCoreApplication>
-#include <QFileInfo>
 #include <QDebug>
+#include <QFileInfo>
+#include <QSettings>
 
 namespace {
 // Process-wide injection seam for AutoStart::applyToRegistry().
 // nullptr in production; tests call setRegistryForTesting() to install a fake.
 IRegistry* g_testRegistry = nullptr;
-}
+} // namespace
 
 IRegistry* registry() {
     return g_testRegistry;
@@ -18,7 +18,8 @@ void setRegistryForTesting(IRegistry* fake) {
     g_testRegistry = fake;
 }
 
-const QString AutoStart::kRunKey   = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+const QString AutoStart::kRunKey =
+    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 const QString AutoStart::kValueName = "GamepadMouseSim";
 
 QString AutoStart::executablePath() {

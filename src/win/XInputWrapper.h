@@ -6,7 +6,7 @@
 
 class XInputWrapper : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit XInputWrapper(QObject* parent = nullptr);
 
     bool getState(DWORD userIndex, XINPUT_STATE* state);

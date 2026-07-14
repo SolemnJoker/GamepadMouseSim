@@ -1,22 +1,22 @@
 #pragma once
 
-#include <QObject>
 #include "core/Types.h"
+#include <QObject>
 
 class Config;
 
 class MouseMapper : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit MouseMapper(Config* config, QObject* parent = nullptr);
 
     void processLeftStick(float x, float y);
     void processRightStick(float x, float y);
 
-public slots:
+  public slots:
     void onConfigChanged();
 
-private:
+  private:
     void loadConfig();
 
     Config* m_config;

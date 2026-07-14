@@ -1,23 +1,23 @@
 #pragma once
 
-#include <QObject>
-#include <QElapsedTimer>
 #include "core/Types.h"
+#include <QElapsedTimer>
+#include <QObject>
 
 class ComboKeyDetector : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit ComboKeyDetector(int controllerIndex, QObject* parent = nullptr);
 
     void setHoldDuration(int ms) { m_holdDurationMs = ms; }
 
-public slots:
+  public slots:
     void onGamepadState(int controllerIndex, const GamepadState& state);
 
-signals:
+  signals:
     void comboTriggered(int controllerIndex);
 
-private:
+  private:
     int m_controllerIndex;
     QElapsedTimer m_holdTimer;
     bool m_holding = false;

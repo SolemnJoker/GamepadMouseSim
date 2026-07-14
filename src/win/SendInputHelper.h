@@ -5,7 +5,7 @@
 
 class SendInputHelper : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit SendInputHelper(QObject* parent = nullptr);
 
     static void moveMouse(int dx, int dy);

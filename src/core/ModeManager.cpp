@@ -4,10 +4,7 @@
 #include <QDebug>
 
 ModeManager::ModeManager(Config* config, int controllerIndex, QObject* parent)
-    : QObject(parent)
-    , m_config(config)
-    , m_controllerIndex(controllerIndex)
-{
+    : QObject(parent), m_config(config), m_controllerIndex(controllerIndex) {
     connect(&m_lockoutTimer, &QTimer::timeout, this, [this]() {
         qDebug() << "Lockout expired for Pad" << m_controllerIndex;
         m_lockoutTimer.stop();
@@ -24,10 +21,11 @@ void ModeManager::manualSwitch() {
         qDebug() << "Manual switch blocked for Pad" << m_controllerIndex;
         return;
     }
-    GamepadMode newMode = (m_mode == GamepadMode::Default) ? GamepadMode::Mouse : GamepadMode::Default;
+    GamepadMode newMode =
+        (m_mode == GamepadMode::Default) ? GamepadMode::Mouse : GamepadMode::Default;
     qDebug() << "Pad" << m_controllerIndex << "manual switch from"
-             << (m_mode == GamepadMode::Mouse ? "Mouse" : "Default")
-             << "to" << (newMode == GamepadMode::Mouse ? "Mouse" : "Default");
+             << (m_mode == GamepadMode::Mouse ? "Mouse" : "Default") << "to"
+             << (newMode == GamepadMode::Mouse ? "Mouse" : "Default");
     // A manual switch clears the auto-switch origin flag, so the user stays in
     // control of the resulting mode.
     m_autoSwitched = false;
@@ -68,12 +66,14 @@ void ModeManager::onConfigChanged() {
 void ModeManager::setMode(GamepadMode mode) {
     if (m_mode != mode) {
         m_mode = mode;
-        qDebug() << "Pad" << m_controllerIndex << "mode changed to:" << (mode == GamepadMode::Mouse ? "Mouse" : "Default");
+        qDebug() << "Pad" << m_controllerIndex
+                 << "mode changed to:" << (mode == GamepadMode::Mouse ? "Mouse" : "Default");
         emit modeChanged(m_controllerIndex, mode);
     }
 }
 
 void ModeManager::loadConfig() {
-    m_lockoutMs = m_config->value("monitoring.manual_switch_lockout_seconds", 3).toInt() * kMsPerSecond;
+    m_lockoutMs =
+        m_config->value("monitoring.manual_switch_lockout_seconds", 3).toInt() * kMsPerSecond;
     qDebug() << "Pad" << m_controllerIndex << "config loaded - lockout:" << m_lockoutMs << "ms";
 }

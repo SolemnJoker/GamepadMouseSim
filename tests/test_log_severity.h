@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QtTest>
 #include <QString>
+#include <QtTest>
 
 class TestLogSeverity : public QObject {
     Q_OBJECT
-private slots:
+  private slots:
     void init();
     void cleanup();
 
@@ -13,7 +13,7 @@ private slots:
     void qCritical_capturesMessage();
     void severityLevels_correctlyLabelled();
 
-private:
+  private:
     QString m_captured;
     QtMessageHandler m_oldHandler = nullptr;
 

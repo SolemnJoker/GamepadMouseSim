@@ -1,13 +1,11 @@
 #include "SystemTray.h"
 #include <QApplication>
-#include <QPainter>
 #include <QIcon>
-#include <QSvgRenderer>
+#include <QPainter>
 #include <QPainterPath>
+#include <QSvgRenderer>
 
-SystemTray::SystemTray(QObject* parent)
-    : QObject(parent)
-{
+SystemTray::SystemTray(QObject* parent) : QObject(parent) {
     std::fill(m_padModes.begin(), m_padModes.end(), GamepadMode::Mouse);
     std::fill(m_padConnected.begin(), m_padConnected.end(), false);
 
@@ -51,7 +49,8 @@ void SystemTray::hide() {
 }
 
 void SystemTray::onModeChanged(int controllerIndex, GamepadMode mode) {
-    if (controllerIndex >= kMaxGamepads) return;
+    if (controllerIndex >= kMaxGamepads)
+        return;
     m_padModes[controllerIndex] = mode;
     m_padConnected[controllerIndex] = true;
 
@@ -75,8 +74,8 @@ void SystemTray::updateTooltip() {
     QStringList padInfo;
     for (int i = 0; i < kMaxGamepads; ++i) {
         if (m_padConnected[i]) {
-            padInfo << QString("P%1:%2").arg(i + 1)
-                       .arg(m_padModes[i] == GamepadMode::Mouse ? "M" : "D");
+            padInfo << QString("P%1:%2").arg(i + 1).arg(m_padModes[i] == GamepadMode::Mouse ? "M"
+                                                                                            : "D");
         }
     }
     if (padInfo.isEmpty()) {
@@ -94,7 +93,8 @@ void SystemTray::updateIcon(GamepadMode mode) {
 
 QIcon SystemTray::renderSvg(const QString& path, int size) {
     QSvgRenderer renderer(path);
-    if (!renderer.isValid()) return QIcon(path);
+    if (!renderer.isValid())
+        return QIcon(path);
     QPixmap pixmap(size, size);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);

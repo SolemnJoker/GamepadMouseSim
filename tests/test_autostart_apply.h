@@ -1,12 +1,12 @@
 #pragma once
 
-#include <QtTest>
+#include "core/AutoStart.h"
 #include <QHash>
 #include <QString>
-#include "core/AutoStart.h"
+#include <QtTest>
 
 class FakeRegistry : public IRegistry {
-public:
+  public:
     bool contains(const QString& v) const override { return values.contains(v); }
     void setValue(const QString& v, const QString& val) override {
         lastWrite = v;
@@ -22,7 +22,7 @@ public:
 
 class TestAutostartApply : public QObject {
     Q_OBJECT
-private slots:
+  private slots:
     void init() {
         m_fake.values.clear();
         m_fake.lastWrite.clear();
@@ -36,6 +36,6 @@ private slots:
     void enable_whenAlreadyEnabled_idempotent();
     void disable_whenAbsent_noop();
 
-private:
+  private:
     FakeRegistry m_fake;
 };

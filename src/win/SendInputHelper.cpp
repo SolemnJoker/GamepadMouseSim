@@ -1,9 +1,6 @@
 #include "SendInputHelper.h"
 
-SendInputHelper::SendInputHelper(QObject* parent)
-    : QObject(parent)
-{
-}
+SendInputHelper::SendInputHelper(QObject* parent) : QObject(parent) {}
 
 void SendInputHelper::moveMouse(int dx, int dy) {
     INPUT input = {};

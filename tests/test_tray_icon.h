@@ -1,18 +1,18 @@
 #pragma once
 
-#include <QtTest>
-#include <QObject>
-#include <QIcon>
-#include <QPixmap>
-#include <memory>
 #include "ui/SystemTray.h"
+#include <QIcon>
+#include <QObject>
+#include <QPixmap>
+#include <QtTest>
+#include <memory>
 
 class TestTrayIcon : public QObject {
     Q_OBJECT
-private slots:
+  private slots:
     void construct_doesNotThrow();
     void icon_isNotNull();
 
-private:
+  private:
     std::unique_ptr<SystemTray> m_tray;
 };

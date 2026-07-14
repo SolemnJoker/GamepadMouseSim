@@ -1,13 +1,10 @@
 #include "MouseMapper.h"
 #include "core/Config.h"
 #include "win/SendInputHelper.h"
-#include <cmath>
 #include <QDebug>
+#include <cmath>
 
-MouseMapper::MouseMapper(Config* config, QObject* parent)
-    : QObject(parent)
-    , m_config(config)
-{
+MouseMapper::MouseMapper(Config* config, QObject* parent) : QObject(parent), m_config(config) {
     loadConfig();
 }
 
@@ -27,7 +24,8 @@ void MouseMapper::processLeftStick(float x, float y) {
     }
 
     float norm = (mag - m_deadzone) / (1.0f - m_deadzone);
-    if (norm > 1.0f) norm = 1.0f;
+    if (norm > 1.0f)
+        norm = 1.0f;
     float nx = x / mag;
     float ny = y / mag;
 
@@ -81,10 +79,16 @@ void MouseMapper::onConfigChanged() {
 }
 
 void MouseMapper::loadConfig() {
-    m_sensX = m_config->value("mouse_mode.left_stick.sensitivity_x", kDefaultSensitivityX).toFloat();
-    m_sensY = m_config->value("mouse_mode.left_stick.sensitivity_y", kDefaultSensitivityY).toFloat();
+    m_sensX =
+        m_config->value("mouse_mode.left_stick.sensitivity_x", kDefaultSensitivityX).toFloat();
+    m_sensY =
+        m_config->value("mouse_mode.left_stick.sensitivity_y", kDefaultSensitivityY).toFloat();
     m_deadzone = m_config->value("mouse_mode.left_stick.deadzone", kDefaultDeadzone).toFloat();
     m_acceleration = m_config->value("mouse_mode.left_stick.acceleration", true).toBool();
-    m_scrollSpeedV = m_config->value("mouse_mode.right_stick.scroll_speed_vertical", kDefaultScrollSpeed).toFloat();
-    m_scrollSpeedH = m_config->value("mouse_mode.right_stick.scroll_speed_horizontal", kDefaultScrollSpeed).toFloat();
+    m_scrollSpeedV =
+        m_config->value("mouse_mode.right_stick.scroll_speed_vertical", kDefaultScrollSpeed)
+            .toFloat();
+    m_scrollSpeedH =
+        m_config->value("mouse_mode.right_stick.scroll_speed_horizontal", kDefaultScrollSpeed)
+            .toFloat();
 }

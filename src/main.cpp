@@ -1,9 +1,9 @@
+#include "app/Application.h"
 #include <QApplication>
+#include <QDateTime>
 #include <QFile>
 #include <QTextStream>
-#include <QDateTime>
 #include <windows.h>
-#include "app/Application.h"
 
 static QFile* s_logFile = nullptr;
 
@@ -11,11 +11,20 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext& context, con
     Q_UNUSED(context);
     QString txt;
     switch (type) {
-    case QtDebugMsg: txt = msg; break;
-    case QtWarningMsg: txt = "WARN: " + msg; break;
-    case QtCriticalMsg: txt = "CRIT: " + msg; break;
-    case QtFatalMsg: txt = "FATAL: " + msg; break;
-    default: txt = msg;
+    case QtDebugMsg:
+        txt = msg;
+        break;
+    case QtWarningMsg:
+        txt = "WARN: " + msg;
+        break;
+    case QtCriticalMsg:
+        txt = "CRIT: " + msg;
+        break;
+    case QtFatalMsg:
+        txt = "FATAL: " + msg;
+        break;
+    default:
+        txt = msg;
     }
 
     OutputDebugStringW((LPCWSTR)(txt + "\n").utf16());

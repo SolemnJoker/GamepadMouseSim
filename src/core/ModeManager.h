@@ -1,14 +1,14 @@
 #pragma once
 
+#include "Types.h"
 #include <QObject>
 #include <QTimer>
-#include "Types.h"
 
 class Config;
 
 class ModeManager : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit ModeManager(Config* config, int controllerIndex, QObject* parent = nullptr);
 
     void start();
@@ -18,7 +18,7 @@ public:
     int controllerIndex() const { return m_controllerIndex; }
     bool isAutoSwitched() const { return m_autoSwitched; }
 
-public slots:
+  public slots:
     void manualSwitch();
     void toggleLock();
     void togglePause();
@@ -28,10 +28,10 @@ public slots:
     // auto-switching in config. The reason string is logged only.
     void autoSwitchToDefault(const QString& reason = QString());
 
-signals:
+  signals:
     void modeChanged(int controllerIndex, GamepadMode mode);
 
-private:
+  private:
     void setMode(GamepadMode mode);
     void loadConfig();
 
@@ -40,7 +40,7 @@ private:
     GamepadMode m_mode = GamepadMode::Mouse;
     bool m_locked = false;
     bool m_paused = false;
-    bool m_autoSwitched = false;   // true if the current Default state was reached by auto-switch
+    bool m_autoSwitched = false; // true if the current Default state was reached by auto-switch
     QTimer m_lockoutTimer;
     int m_lockoutMs = kDefaultManualLockoutMs;
 };

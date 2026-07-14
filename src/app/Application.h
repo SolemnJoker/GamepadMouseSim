@@ -1,31 +1,31 @@
 #pragma once
 
-#include <QObject>
-#include <QApplication>
-#include <array>
+#include "core/AutoModeController.h"
 #include "core/Config.h"
 #include "core/ModeManager.h"
-#include "core/AutoModeController.h"
-#include "gamepad/GamepadPoller.h"
 #include "gamepad/ComboKeyDetector.h"
+#include "gamepad/GamepadPoller.h"
 #include "input/InputMapper.h"
-#include "ui/SystemTray.h"
 #include "ui/OsdOverlay.h"
+#include "ui/SystemTray.h"
+#include <QApplication>
+#include <QObject>
+#include <array>
 
 class QDialog;
 
 class Application : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit Application(QObject* parent = nullptr);
     ~Application();
 
     bool initialize();
 
-private slots:
+  private slots:
     void showSettings();
 
-private:
+  private:
     Config m_config;
     GamepadPoller m_gamepadPoller;
     SystemTray m_systemTray;

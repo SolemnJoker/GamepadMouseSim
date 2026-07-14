@@ -1,30 +1,30 @@
 #pragma once
 
-#include <QObject>
-#include <QMap>
-#include <QSet>
 #include "core/Types.h"
+#include <QMap>
+#include <QObject>
+#include <QSet>
 
 class Config;
 
 class KeyboardMapper : public QObject {
     Q_OBJECT
-public:
+  public:
     explicit KeyboardMapper(Config* config, QObject* parent = nullptr);
 
     void processButton(uint16_t button, bool pressed, uint16_t prevButtons);
-    void processTrigger(float leftTrigger, float rightTrigger,
-                        float prevLeftTrigger, float prevRightTrigger);
+    void processTrigger(float leftTrigger, float rightTrigger, float prevLeftTrigger,
+                        float prevRightTrigger);
     void releaseModifiers();
 
-public slots:
+  public slots:
     void onConfigChanged();
 
-signals:
+  signals:
     void scrollRequested(float dx, float dy);
     void showHelpRequested();
 
-private:
+  private:
     void loadConfig();
     void executeAction(ButtonAction action);
 
