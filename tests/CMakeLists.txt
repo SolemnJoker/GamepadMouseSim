@@ -55,3 +55,15 @@ target_link_libraries(test_log_severity PRIVATE
     src_core
 )
 add_test(NAME test_log_severity COMMAND test_log_severity)
+
+# actionToChinese: every ButtonAction enum value must have a non-empty label.
+qt_add_executable(test_action_to_chinese
+    test_action_to_chinese_main.cpp
+    test_action_to_chinese.cpp
+)
+target_link_libraries(test_action_to_chinese PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_action_to_chinese COMMAND test_action_to_chinese)

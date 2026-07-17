@@ -53,27 +53,32 @@ cd installer
 
 | 按键 | 功能 |
 |------|------|
-| A / B / X | 鼠标左键 / 右键 / 中键 |
-| LB / RB | 按住左键 / 右键（配合左摇杆拖拽） |
-| Y | 回车(Enter) |
-| L3 | 回车(Enter) |
-| R3 | 退出(Escape) |
-| View | Tab键 |
-| Menu | Win键 |
-| 左摇杆 | 移动鼠标光标 |
-| 右摇杆 | 滚轮 |
-| Dpad ↑↓← | 音量增减 / 静音 |
-| **按住 LT +** | **Alt 组合键模式** |
-| LT+X | 打开窗口切换器(Alt+Tab) |
-| LT+LB/RB | 切换器左/右选择 |
-| LT+Y | 关闭窗口(Alt+F4) |
-| LT+R3 | **显示操作帮助** |
-| LT+View(长按1秒) | **切换鼠标/默认模式** |
-| **按住 RT +** | **Ctrl 组合键模式** |
-| RT+Dpad→/← | 浏览器标签切换(Ctrl+Tab) |
-| RT+Dpad↑/↓ | 翻页(PageUp/Down) |
-| RT+A/B/X/Y | 全选/复制/剪切/粘贴 |
+| A | 鼠标左键 |
+| B | 鼠标右键 |
+| X | 鼠标中键 |
+| LB | 按住左键（配合摇杆拖拽） |
+| RB | 按住右键（配合摇杆拖拽） |
+| Y | 回车 |
+| L3 | 回车 |
+| R3 | 退出 |
+| View | Tab |
+| Menu | 开始菜单 |
 
+<sup>按键映射来源: core/Types.cpp actionToChinese()</sup>
+
+### 扳机组和层 (LT/RT)
+
+**按住 LT +**
+
+| 组合 | 功能 |
+|------|------|
+| LT+X | Alt+Tab |
+| LT+LB/RB | KeyShiftTab / Tab |
+| LT+Y | 关闭窗口 |
+| LT+R3 | 显示帮助 |
+| LT+View |  |
+
+<sup>LT/RT 层修改器在 InputMapper.cpp 中定义</sup>
 ## 📖 文档
 
 - [使用说明书](USER_MANUAL.md) — 详细操作指南和常见问题
