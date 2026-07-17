@@ -28,6 +28,8 @@ class Config : public QObject {
     void onFileChanged(const QString& path);
 
   private:
+    bool loadDefault();
+
     QVariant getNestedValue(const QJsonObject& obj, const QStringList& keys) const;
     void setNestedValue(QJsonObject& obj, const QStringList& keys, const QVariant& value);
 

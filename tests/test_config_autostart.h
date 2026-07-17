@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Config.h"
+#include "core/Types.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSignalSpy>
@@ -17,6 +18,7 @@ class TestConfigAutostart : public QObject {
     void setValue_writesToDisk();
     void reloadReReadsValue();
     void nestedPathRoundTrip();
+    void schemaVersion_usesDefaultOnMismatch();
 
   private:
     QTemporaryFile* m_tmpFile = nullptr;

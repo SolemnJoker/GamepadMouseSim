@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "core/Types.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -26,6 +27,15 @@ bool Config::load(const QString& path) {
     m_data = QJsonDocument::fromJson(file.readAll()).object();
     file.close();
 
+    // Check schema version — overwrite with default if too old.
+    const int version = value("schema_version", 0).toInt();
+    if (version < kCurrentConfigSchemaVersion) {
+        qInfo() << "Config schema version" << version
+                << "<" << kCurrentConfigSchemaVersion
+                << "- overwriting with default";
+        loadDefault();
+    }
+
     if (m_watcher.files().contains(path)) {
         m_watcher.removePath(path);
     }
@@ -33,6 +43,16 @@ bool Config::load(const QString& path) {
     connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, &Config::onFileChanged);
 
     return true;
+}
+
+bool Config::loadDefault() {
+    QString defaultPath = QCoreApplication::applicationDirPath() + "/config/default_config.json";
+    QFile defaultFile(defaultPath);
+    if (!defaultFile.open(QIODevice::ReadOnly))
+        return false;
+    m_data = QJsonDocument::fromJson(defaultFile.readAll()).object();
+    defaultFile.close();
+    return save();
 }
 
 bool Config::save() {

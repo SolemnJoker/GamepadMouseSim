@@ -1,4 +1,5 @@
 #include "test_config_autostart.h"
+#include <QDir>
 #include <QFile>
 #include <QJsonParseError>
 
@@ -66,4 +67,36 @@ void TestConfigAutostart::nestedPathRoundTrip() {
     QJsonObject obj = m_config->value("a").toJsonObject();
     QCOMPARE(obj.value("x").toString(), QStringLiteral("untouched"));
     QCOMPARE(obj.value("b").toObject().value("c").toInt(), 42);
+}
+
+void TestConfigAutostart::schemaVersion_usesDefaultOnMismatch() {
+    // Create a default config file at the expected location so loadDefault()
+    // can find it. QCoreApplication::applicationDirPath() returns the test
+    // binary's directory; we create a config/ subdir there.
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QString configDir = appDir + "/config";
+    QDir().mkpath(configDir);
+    const QString defaultPath = configDir + "/default_config.json";
+    {
+        QFile def(defaultPath);
+        QVERIFY(def.open(QIODevice::WriteOnly));
+        def.write(R"({"schema_version": 1, "autostart": false})");
+        def.close();
+    }
+
+    // Create a config with old schema version.
+    QTemporaryFile oldCfg(this);
+    oldCfg.open();
+    oldCfg.write(R"({"schema_version": 0, "autostart": true})");
+    oldCfg.close();
+
+    Config cfg(this);
+    QVERIFY(cfg.load(oldCfg.fileName()));
+    // After loading, version-mismatch should trigger overwrite with default.
+    QCOMPARE(cfg.value("schema_version", 0).toInt(), kCurrentConfigSchemaVersion);
+    QCOMPARE(cfg.value("autostart", true).toBool(), false);
+
+    // Cleanup.
+    QFile::remove(defaultPath);
+    QDir().rmdir(configDir);
 }
