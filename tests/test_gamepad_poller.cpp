@@ -29,9 +29,9 @@ void TestGamepadPoller::ltView_hold1s_triggersModeSwitch() {
     constexpr uint16_t L3_VIEW = 0x0040 | 0x0020;
     std::vector<XINPUT_STATE> seq(65);
     for (int i = 0; i < 5; ++i)
-        seq[i] = makeFrame(0);               // idle
+        seq[i] = makeFrame(0); // idle
     for (int i = 5; i < 65; ++i)
-        seq[i] = makeFrame(L3_VIEW);         // L3+View held
+        seq[i] = makeFrame(L3_VIEW); // L3+View held
     m_fake.setSequence(0, seq);
 
     // ModeManager requires a Config instance.

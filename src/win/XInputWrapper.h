@@ -6,7 +6,7 @@
 
 // Test seam for injecting fake gamepad input.
 class IXInput {
-public:
+  public:
     virtual ~IXInput() = default;
     virtual bool getState(DWORD userIndex, XINPUT_STATE* state) = 0;
 };
@@ -19,7 +19,7 @@ void setXInputForTesting(IXInput* fake);
 // setXInputForTesting() instead of using this class directly.
 class XInputWrapper : public QObject, public IXInput {
     Q_OBJECT
-public:
+  public:
     explicit XInputWrapper(QObject* parent = nullptr);
     bool getState(DWORD userIndex, XINPUT_STATE* state) override;
 };

@@ -5,6 +5,6 @@
 
 class TestActionToChinese : public QObject {
     Q_OBJECT
-private slots:
+  private slots:
     void allActions_haveNonEmptyMapping();
 };

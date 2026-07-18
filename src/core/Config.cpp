@@ -30,8 +30,7 @@ bool Config::load(const QString& path) {
     // Check schema version — overwrite with default if too old.
     const int version = value("schema_version", 0).toInt();
     if (version < kCurrentConfigSchemaVersion) {
-        qInfo() << "Config schema version" << version
-                << "<" << kCurrentConfigSchemaVersion
+        qInfo() << "Config schema version" << version << "<" << kCurrentConfigSchemaVersion
                 << "- overwriting with default";
         loadDefault();
     }

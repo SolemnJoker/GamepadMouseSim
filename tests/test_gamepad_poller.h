@@ -9,7 +9,7 @@
 
 // In-memory fake that returns scripted XINPUT_STATE sequences per controller.
 class FakeXInput : public IXInput {
-public:
+  public:
     void setSequence(DWORD idx, const std::vector<XINPUT_STATE>& frames) {
         m_sequences[idx] = frames;
         m_cursors[idx] = 0;
@@ -27,19 +27,19 @@ public:
         return true;
     }
 
-private:
+  private:
     std::unordered_map<DWORD, std::vector<XINPUT_STATE>> m_sequences;
     std::unordered_map<DWORD, size_t> m_cursors;
 };
 
 class TestGamepadPoller : public QObject {
     Q_OBJECT
-private slots:
+  private slots:
     void init();
     void cleanup();
 
     void ltView_hold1s_triggersModeSwitch();
 
-private:
+  private:
     FakeXInput m_fake;
 };
