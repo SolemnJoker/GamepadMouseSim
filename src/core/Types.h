@@ -85,23 +85,55 @@ constexpr int kXInputDeadzoneMax = 7849; // XInput recommended deadzone upper bo
 constexpr int kMsPerSecond = 1000;       // seconds → milliseconds
 constexpr int kCurrentConfigSchemaVersion = 1; // bump on breaking config changes
 
+#ifndef XINPUT_GAMEPAD_DPAD_UP
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_UP = 0x0001;
+#endif
+#ifndef XINPUT_GAMEPAD_DPAD_DOWN
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_DOWN = 0x0002;
+#endif
+#ifndef XINPUT_GAMEPAD_DPAD_LEFT
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_LEFT = 0x0004;
+#endif
+#ifndef XINPUT_GAMEPAD_DPAD_RIGHT
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_RIGHT = 0x0008;
+#endif
+#ifndef XINPUT_GAMEPAD_START
 constexpr uint16_t XINPUT_GAMEPAD_START = 0x0010;
+#endif
+#ifndef XINPUT_GAMEPAD_BACK
 constexpr uint16_t XINPUT_GAMEPAD_BACK = 0x0020;
+#endif
+#ifndef XINPUT_GAMEPAD_LEFT_THUMB
 constexpr uint16_t XINPUT_GAMEPAD_LEFT_THUMB = 0x0040;
+#endif
+#ifndef XINPUT_GAMEPAD_RIGHT_THUMB
 constexpr uint16_t XINPUT_GAMEPAD_RIGHT_THUMB = 0x0080;
+#endif
+#ifndef XINPUT_GAMEPAD_LEFT_SHOULDER
 constexpr uint16_t XINPUT_GAMEPAD_LEFT_SHOULDER = 0x0100;
+#endif
+#ifndef XINPUT_GAMEPAD_RIGHT_SHOULDER
 constexpr uint16_t XINPUT_GAMEPAD_RIGHT_SHOULDER = 0x0200;
+#endif
+#ifndef XINPUT_GAMEPAD_A
 constexpr uint16_t XINPUT_GAMEPAD_A = 0x1000;
+#endif
+#ifndef XINPUT_GAMEPAD_B
 constexpr uint16_t XINPUT_GAMEPAD_B = 0x2000;
+#endif
+#ifndef XINPUT_GAMEPAD_X
 constexpr uint16_t XINPUT_GAMEPAD_X = 0x4000;
+#endif
+#ifndef XINPUT_GAMEPAD_Y
 constexpr uint16_t XINPUT_GAMEPAD_Y = 0x8000;
+#endif
 
+#ifndef XINPUT_TRIGGER_LEFT
 constexpr uint16_t XINPUT_TRIGGER_LEFT = 0x100;
+#endif
+#ifndef XINPUT_TRIGGER_RIGHT
 constexpr uint16_t XINPUT_TRIGGER_RIGHT = 0x200;
+#endif
 
 ButtonAction stringToAction(const QString& str);
 QString actionToString(ButtonAction action);

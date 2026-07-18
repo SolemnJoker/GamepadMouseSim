@@ -67,3 +67,22 @@ target_link_libraries(test_action_to_chinese PRIVATE
     src_core
 )
 add_test(NAME test_action_to_chinese COMMAND test_action_to_chinese)
+
+# Gamepad input simulation: FakeXInput feeds scripted button sequences
+# through ComboKeyDetector + ModeManager to verify LT+View mode switch.
+qt_add_executable(test_gamepad_poller
+    test_gamepad_poller_main.cpp
+    test_gamepad_poller.cpp
+    ${CMAKE_SOURCE_DIR}/src/gamepad/ComboKeyDetector.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/ModeManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/win/XInputWrapper.cpp
+)
+target_link_libraries(test_gamepad_poller PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+    xinput
+)
+add_test(NAME test_gamepad_poller COMMAND test_gamepad_poller)
+set_tests_properties(test_gamepad_poller PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\;C:/Qt/6.8.3/msvc2022_64/bin")

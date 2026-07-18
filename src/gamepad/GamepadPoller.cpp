@@ -1,4 +1,5 @@
 #include "GamepadPoller.h"
+#include "win/XInputWrapper.h"
 #include <QDebug>
 #include <QThread>
 
@@ -47,7 +48,7 @@ static float applyDeadzone(float x, float y, float deadzone, float& outX, float&
 void GamepadPoller::pollOnce() {
     for (int i = 0; i < kMaxGamepads; ++i) {
         XINPUT_STATE xState;
-        bool connected = m_xinput.getState(i, &xState);
+        bool connected = xInput()->getState(i, &xState);
 
         GamepadState state;
         state.connected = connected;

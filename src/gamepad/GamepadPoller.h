@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/Types.h"
-#include "win/XInputWrapper.h"
 #include <QObject>
 #include <QThread>
 #include <array>
@@ -34,7 +33,6 @@ class GamepadPoller : public QObject {
 
     void pollOnce();
 
-    XInputWrapper m_xinput;
     PollThread m_thread;
     std::array<GamepadState, kMaxGamepads> m_prevState;
 };
