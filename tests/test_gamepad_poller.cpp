@@ -46,9 +46,11 @@ void TestGamepadPoller::ltView_hold1s_triggersModeSwitch() {
     int idx = 0;
     auto* cd = new ComboKeyDetector(idx, this);
     auto* mm = new ModeManager(&cfg, idx, this);
-    // Set a low hold duration so the combo triggers within the test's
-    // tight loop (~18ms total) instead of requiring real 1-second wait.
-    cd->setHoldDuration(1); // 1 ms
+    // Set a zero hold duration so the combo triggers on the SECOND frame
+    // deterministically. With QElapsedTimer measuring real time, a 1ms hold
+    // is flaky in a tight Release loop where elapsed() may stay < 1ms for
+    // the whole 65-frame burst.
+    cd->setHoldDuration(0); // 0 ms — triggers on the second L3+View frame
 
     // Wire: ComboKeyDetector::comboTriggered → ModeManager::manualSwitch
     connect(cd, &ComboKeyDetector::comboTriggered, this, [mm](int cIdx) {

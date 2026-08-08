@@ -17,7 +17,7 @@ class GameDetector;
 //        (we do not auto-switch back, per the chosen behavior).
 //   2.2  If a pad is currently in Mouse mode and a game is detected,
 //        auto-switch it to Default.
-//   2.2b Boot defaults to Mouse mode (handled by ModeManager).
+//   2.2b Boot defaults to Default mode (handled by ModeManager).
 class AutoModeController : public QObject {
     Q_OBJECT
   public:

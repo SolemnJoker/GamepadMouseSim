@@ -85,4 +85,4 @@ target_link_libraries(test_gamepad_poller PRIVATE
 )
 add_test(NAME test_gamepad_poller COMMAND test_gamepad_poller)
 set_tests_properties(test_gamepad_poller PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\;C:/Qt/6.8.3/msvc2022_64/bin")
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")

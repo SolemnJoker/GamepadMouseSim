@@ -6,10 +6,10 @@
 #include <QSvgRenderer>
 
 SystemTray::SystemTray(QObject* parent) : QObject(parent) {
-    std::fill(m_padModes.begin(), m_padModes.end(), GamepadMode::Mouse);
+    std::fill(m_padModes.begin(), m_padModes.end(), GamepadMode::Default);
     std::fill(m_padConnected.begin(), m_padConnected.end(), false);
 
-    m_statusAction = m_menu.addAction("模式: 鼠标");
+    m_statusAction = m_menu.addAction("模式: 默认");
     m_statusAction->setEnabled(false);
     m_menu.addSeparator();
 
@@ -37,7 +37,7 @@ SystemTray::SystemTray(QObject* parent) : QObject(parent) {
 
     m_iconMouse = renderSvg(":/icons/mouse.svg", 32);
     m_iconGamepad = renderSvg(":/icons/gamepad.svg", 32);
-    updateIcon(GamepadMode::Mouse);
+    updateIcon(GamepadMode::Default);
 }
 
 void SystemTray::show() {

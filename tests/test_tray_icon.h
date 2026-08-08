@@ -10,6 +10,7 @@
 class TestTrayIcon : public QObject {
     Q_OBJECT
   private slots:
+    void initTestCase();
     void construct_doesNotThrow();
     void icon_isNotNull();
 

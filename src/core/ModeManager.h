@@ -37,7 +37,7 @@ class ModeManager : public QObject {
 
     Config* m_config;
     int m_controllerIndex;
-    GamepadMode m_mode = GamepadMode::Mouse;
+    GamepadMode m_mode = GamepadMode::Default;
     bool m_locked = false;
     bool m_paused = false;
     bool m_autoSwitched = false; // true if the current Default state was reached by auto-switch

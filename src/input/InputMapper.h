@@ -25,7 +25,7 @@ class InputMapper : public QObject {
     int m_controllerIndex;
     MouseMapper m_mouseMapper;
     KeyboardMapper m_keyboardMapper;
-    GamepadMode m_mode = GamepadMode::Mouse;
+    GamepadMode m_mode = GamepadMode::Default;
     float m_prevLeftTrigger = 0.0f;
     float m_prevRightTrigger = 0.0f;
 };

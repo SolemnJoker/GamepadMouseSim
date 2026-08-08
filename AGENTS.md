@@ -6,7 +6,7 @@ Compact repo-specific notes for OpenCode sessions. Full architecture lives in `C
 
 - **GamepadMouseSim** — Windows desktop app. Qt 6.8.3 (Widgets + Svg) + C++17 + CMake. XInput, up to 4 gamepads.
 - One executable, no main window; runs from the system tray. Logs to `debug.log` next to the exe and to OutputDebugString.
-- Output is intentionally **not** `WIN32_EXECUTABLE` — a console window stays attached to bypass Smart App Control and show the debug log.
+- Output is `WIN32_EXECUTABLE` (no console window). Debug output still goes to `debug.log` + OutputDebugString via the custom `qInstallMessageHandler` in `src/main.cpp`.
 
 ## Build
 
@@ -42,7 +42,7 @@ powershell -File skills/deploy/deploy.ps1 -TargetDir "E:\program files\GamepadMo
 - **Two threads total**: the Qt event loop + a private `QThread` in `src/gamepad/GamepadPoller.cpp` that polls all 4 controllers at 60 Hz (~16 ms, see `kGamepadPollIntervalMs`).
 - **`processTrigger` runs in both modes** (so LT/RT modifier state is tracked everywhere); **`processButton` only in Mouse mode**. Default mode still handles R3 (help) and forwards LT+View to the combo detector — see `InputMapper.cpp`.
 - **Mode switch releases held modifiers** via `InputMapper::releaseModifiers()` triggered by `ModeManager::setMode`, so Alt/Ctrl can't get stuck.
-- **Auto-switch is one-way**: `AutoModeController` only flips Mouse→Default on game detection; it never auto-flips back. Boot default is Mouse.
+- **Auto-switch is one-way**: `AutoModeController` only flips Mouse→Default on game detection; it never auto-flips back. Boot default is Default.
 
 ## Config
 

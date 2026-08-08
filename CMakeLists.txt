@@ -92,7 +92,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     dxgi
 )
 
-# 不设 WIN32_EXECUTABLE，保留控制台窗口避免 Smart App Control 拦截
+# WIN32_EXECUTABLE: 无控制台窗口（GUI 应用）。调试输出仍写入 debug.log
+# 和 OutputDebugString（见 src/main.cpp 的 qInstallMessageHandler）。
+set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 
 
 install(TARGETS ${PROJECT_NAME}

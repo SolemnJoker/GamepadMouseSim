@@ -13,7 +13,7 @@ ModeManager::ModeManager(Config* config, int controllerIndex, QObject* parent)
 
 void ModeManager::start() {
     loadConfig();
-    qDebug() << "ModeManager Pad" << m_controllerIndex << "started, mode: Mouse";
+    qDebug() << "ModeManager Pad" << m_controllerIndex << "started, mode: Default";
 }
 
 void ModeManager::manualSwitch() {
