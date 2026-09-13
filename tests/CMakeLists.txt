@@ -77,11 +77,13 @@ qt_add_executable(test_gamepad_poller
     ${CMAKE_SOURCE_DIR}/src/core/ModeManager.cpp
     ${CMAKE_SOURCE_DIR}/src/win/XInputWrapper.cpp
 )
+file(GLOB _win_kit_um_x64 "C:/Program Files (x86)/Windows Kits/10/Lib/*/um/x64")
+find_library(XINPUT_LIBRARY NAMES xinput1_4 xinput HINTS ${_win_kit_um_x64} REQUIRED)
 target_link_libraries(test_gamepad_poller PRIVATE
     Qt6::Test
     Qt6::Core
     src_core
-    xinput
+    ${XINPUT_LIBRARY}
 )
 add_test(NAME test_gamepad_poller COMMAND test_gamepad_poller)
 set_tests_properties(test_gamepad_poller PROPERTIES

@@ -13,6 +13,13 @@ set(CMAKE_AUTOUIC ON)
 # or the CMAKE_PREFIX_PATH environment variable.
 find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
 
+# XInput import lib name differs between Windows SDK installs: some ship
+# xinput1_4.lib, others only the xinput.lib alias, and find_library does not
+# look inside Windows Kits Lib dirs by default — enumerate them as hints.
+file(GLOB _win_kit_um_x64 "C:/Program Files (x86)/Windows Kits/10/Lib/*/um/x64")
+find_library(XINPUT_LIBRARY NAMES xinput1_4 xinput HINTS ${_win_kit_um_x64} REQUIRED)
+message(STATUS "XInput import library: ${XINPUT_LIBRARY}")
+
 # src_core: pure config + types static lib (no Win32/gamepad/input/ui deps).
 # Lets future tests link Config without dragging in the rest of the engine.
 add_library(src_core STATIC
@@ -88,7 +95,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     src_core
     Qt6::Widgets
     Qt6::Svg
-    xinput1_4
+    ${XINPUT_LIBRARY}
     oleaut32 imm32 opengl32 version winmm
     ws2_32 uuid netapi32 userenv dwmapi
     dxgi
