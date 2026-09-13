@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Compact repo-specific notes for OpenCode sessions. Full architecture lives in `CLAUDE.md`; Chinese user-facing docs are in `README_CN.md`. Read both before non-trivial changes.
+Compact repo-specific notes for OpenCode sessions. Full architecture lives in `CLAUDE.md`; Chinese user-facing docs are in `README.md`. Read both before non-trivial changes.
 
 ## Project at a glance
 
@@ -23,7 +23,7 @@ cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Bu
    && cmake --build build --config Release'
 ```
 
-`tools/generate_help_png.py` is invoked at build time via `add_custom_command` in `CMakeLists.txt:65`. **Python must be on PATH** or the build breaks. Generated `resources/icons/help.png` is gitignored.
+The help overlay is rendered at runtime from the live config (no build-time image; `tools/generate_help_png.py` was retired 2026-09-13).
 
 ## Package
 
@@ -33,7 +33,7 @@ cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Bu
 powershell -File skills/deploy/deploy.ps1 -TargetDir "E:\program files\GamepadMouseSim"
 ```
 
-`deploy.ps1` references fixed paths (VS 2022 Community, Qt 6.8.3). Edit lines 9–11 if your install differs.
+`deploy.ps1` references fixed paths (VS 2022 Community, Qt 6.8.3). Edit lines 9–11 if your install differs. `deploy.ps1` never overwrites user data in the target dir (`config.json`, `debug.log`, `config/` are excluded from the copy). The tray menu offers "恢复默认配置" (factory reset with confirmation dialog → `Config::restoreFactoryDefaults`).
 
 ## Architecture essentials
 
@@ -79,8 +79,9 @@ behavior commit). Specifically:
   `src/app/Application.cpp` → update `docs/superpowers/specs/<date>-*.md` and
   the architecture diagram in `CLAUDE.md`.
 - A new `ButtonAction` value or any change to the button→key mapping → update
-  `README_CN.md` + regenerate `resources/icons/help.png` via
-  `tools/generate_help_png.py`.
+  `README.md` (run `scripts/sync_docs.py` to refresh the button table; the
+  help overlay regenerates automatically at runtime from
+  `src/core/MappingDefaults`).
 - A config-schema change (new key, removed key, default change) → update
   `config/default_config.json` and add an entry to the migration notes in
   `docs/superpowers/specs/config-release-design.md` (when that spec lands).

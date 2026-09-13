@@ -1,50 +1,56 @@
 #!/usr/bin/env python3
 """
-Sync README_CN.md button mapping table from actionToChinese().
+Sync README.md button mapping table from actionToChinese().
 
-Generates a fresh | 按键 | 功能 | table and replaces the section
-between '## 基本操作' and the next heading in README_CN.md.
+Generates fresh | 按键 | 功能 | tables and replaces the section
+between '## 🎮 基本操作' and the next heading in README.md.
 
 Usage: python scripts/sync_docs.py
 
 Dependencies: None beyond Python stdlib.
 """
 
-import re
 import os
 
-# Hard-coded mapping: ButtonAction enum name -> button name in README.
-# This MUST be kept in sync with the actual button->action mapping in
-# KeyboardMapper.cpp. If a new ButtonAction is added, add it here.
+# Must match MappingDefaults (single source of truth in src/core/MappingDefaults).
+# "L3+" = the config LT layer, entered by holding L3 (left-stick click).
 BUTTON_MAP = [
-    ("A",   "MouseLeftClick"),
-    ("B",   "MouseRightClick"),
-    ("X",   "MouseMiddleClick"),
-    ("LB",  "MouseLeftHold"),
-    ("RB",  "MouseRightHold"),
-    ("Y",   "KeyEnter"),
-    ("L3",  "KeyEnter"),
-    ("R3",  "KeyEscape"),
+    ("A",    "MouseLeftClick"),
+    ("B",    "MouseRightClick"),
+    ("X",    "MouseMiddleClick"),
+    ("LB",   "MouseLeftHold"),
+    ("RB",   "MouseRightHold"),
+    ("Y",    "KeyEnter"),
+    ("R3",   "KeyEscape"),
     ("View", "KeyTab"),
     ("Menu", "KeyWin"),
 ]
 
-# Modifier-layer mappings (LT / RT)
 LT_MAP = [
-    ("LT+X",       "KeyAltTab"),
-    ("LT+LB/RB",   "KeyShiftTab / Tab"),
-    ("LT+Y",       "KeyAltF4"),
-    ("LT+R3",      "ShowHelp"),
-    ("LT+View",    ""),  # special: mode switch, not a ButtonAction
+    ("L3+X",        "KeyAltTab"),
+    ("L3+LB",       "KeyShiftTab"),
+    ("L3+RB",       "KeyTab"),
+    ("L3+A",        "KeyEnter"),
+    ("L3+B",        "KeyEscape"),
+    ("L3+Y",        "KeyAltF4"),
+    ("L3+DpadUp",   "VolumeUp"),
+    ("L3+DpadDown", "VolumeDown"),
+    ("L3+DpadLeft", "VolumeMute"),
+    ("L3+R3",       "ShowHelp"),
+    ("L3+Menu",     "ShowKeyboard"),
 ]
 
 RT_MAP = [
-    ("RT+A", "KeyCtrlA"),
-    ("RT+B", "KeyCtrlC"),
-    ("RT+X", "KeyCtrlX"),
-    ("RT+Y", "KeyCtrlV"),
-    ("RT+Dpad->/<-", "KeyCtrlTab / KeyCtrlShiftTab"),
-    ("RT+Dpad/ /", "KeyPageUp / KeyPageDown"),
+    ("RT+A",        "KeyCtrlA"),
+    ("RT+B",        "KeyCtrlC"),
+    ("RT+X",        "KeyCtrlX"),
+    ("RT+Y",        "KeyCtrlV"),
+    ("RT+DpadUp",   "KeyPageUp"),
+    ("RT+DpadDown", "KeyPageDown"),
+    ("RT+DpadLeft", "KeyCtrlShiftTab"),
+    ("RT+RB",       "KeyCtrlS"),
+    ("RT+L3",       "KeyWinD"),
+    ("RT+R3",       "KeyCtrlZ"),
 ]
 
 # Chinese label lookup (must match actionToChinese in Types.cpp)
@@ -66,17 +72,16 @@ ACTION_CHINESE = {
     "KeyCtrlC":         "复制",
     "KeyCtrlX":         "剪切",
     "KeyCtrlV":         "粘贴",
+    "KeyCtrlS":         "保存",
+    "KeyCtrlZ":         "撤销",
+    "KeyCtrlShiftTab":  "关闭标签（反向）",
+    "KeyWinD":          "显示桌面",
     "KeyWin":           "开始菜单",
     "ShowHelp":         "显示帮助",
+    "ShowKeyboard":     "虚拟键盘",
     "VolumeUp":         "音量+",
     "VolumeDown":       "音量-",
     "VolumeMute":       "静音",
-    "ScrollUp":         "向上滚动",
-    "ScrollDown":       "向下滚动",
-    "ScrollLeft":       "向左滚动",
-    "ScrollRight":      "向右滚动",
-    "Ctrl+Tab":         "切换标签",
-    "Ctrl+Shift+Tab":   "切换标签（反向）",
 }
 
 
@@ -87,14 +92,7 @@ def make_table(entries, label_col, action_col):
         "|---|------|",
     ]
     for label, action in entries:
-        if action == "":
-            chinese = "长按1秒切换鼠标/默认模式"
-        elif "/" in action:
-            parts = [ACTION_CHINESE.get(a.strip(), a.strip()) for a in action.split("/")]
-            chinese = " / ".join(parts)
-        else:
-            chinese = ACTION_CHINESE.get(action, action)
-        lines.append("| {} | {} |".format(label, chinese))
+        lines.append("| {} | {} |".format(label, ACTION_CHINESE.get(action, action)))
     return "\n".join(lines) + "\n"
 
 
@@ -102,24 +100,18 @@ def sync_readme(readme_path):
     with open(readme_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Build the tables
-    direct_table = make_table(BUTTON_MAP, "按键", "功能")
-    lt_table = make_table(LT_MAP, "组合", "功能")
-    rt_table = make_table(RT_MAP, "组合", "功能")
-
     # Construct the replacement section
     new_section = "## 🎮 基本操作\n\n"
-    new_section += "| 按键 | 功能 |\n|------|------|\n" + "\n".join(
-        "| {} | {} |".format(b, ACTION_CHINESE.get(a, a)) for b, a in BUTTON_MAP
-    ) + "\n\n"
-    new_section += "<sup>按键映射来源: core/Types.cpp actionToChinese()</sup>\n\n"
-    new_section += "### 扳机组和层 (LT/RT)\n\n**按住 LT +**\n\n"
-    new_section += "| 组合 | 功能 |\n|------|------|\n" + "\n".join(
-        "| {} | {} |".format(b, ACTION_CHINESE.get(a, a)) for b, a in LT_MAP
-    ) + "\n\n"
-    new_section += "<sup>LT/RT 层修改器在 InputMapper.cpp 中定义</sup>"
+    new_section += make_table(BUTTON_MAP, "按键", "功能") + "\n"
+    new_section += "> L3 = 左摇杆按下。完整按键表见程序内帮助屏（L3+R3）——"
+    new_section += "它永远与当前生效映射一致。\n\n"
+    new_section += "### L3 层（按住 L3）\n\n"
+    new_section += make_table(LT_MAP, "组合", "功能") + "\n"
+    new_section += "### RT 层（按住 RT）\n\n"
+    new_section += make_table(RT_MAP, "组合", "功能") + "\n"
+    new_section += "<sup>表格由 scripts/sync_docs.py 从按键映射规范自动生成，请勿手工编辑。</sup>\n"
 
-    # Find the section to replace: between "## 🎮 基本操作" and next heading
+    # Replace between "## 🎮 基本操作" and the next heading
     start = content.find("## 🎮 基本操作")
     if start < 0:
         print("ERROR: Could not find '## 🎮 基本操作' in", readme_path)
@@ -141,12 +133,13 @@ def sync_readme(readme_path):
 
 def main():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    readme_path = os.path.join(repo_root, "README_CN.md")
+    readme_path = os.path.join(repo_root, "README.md")
     if not os.path.exists(readme_path):
-        print("README_CN.md not found at", readme_path)
+        print("README.md not found at", readme_path)
         return 1
 
-    sync_readme(readme_path)
+    if not sync_readme(readme_path):
+        return 1
     return 0
 
 

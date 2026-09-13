@@ -20,6 +20,11 @@ nul
 review/
 skills/
 
+# Local agent/tool workspaces + Qt test crash artifacts
+.claude/
+.zcode/
+Testing/
+
 # IDE / OS
 .vscode/
 .idea/
