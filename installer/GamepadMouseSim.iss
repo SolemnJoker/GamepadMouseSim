@@ -21,15 +21,25 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "..\build\GamepadMouseSim.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\Qt6Core.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\Qt6Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\Qt6Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\libgcc_s_seh-1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\libstdc++-6.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\libwinpthread-1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\build\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion
-Source: "..\config\default_config.json"; DestDir: "{app}\config"; Flags: ignoreversion
+Source: "..\dist\GamepadMouseSim.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\Qt6Core.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\Qt6Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\Qt6Network.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\Qt6Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\Qt6Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\libgcc_s_seh-1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\libstdc++-6.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\libwinpthread-1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\D3Dcompiler_47.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\opengl32sw.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion
+Source: "..\dist\imageformats\*"; DestDir: "{app}\imageformats"; Flags: ignoreversion
+Source: "..\dist\iconengines\*"; DestDir: "{app}\iconengines"; Flags: ignoreversion
+Source: "..\dist\styles\*"; DestDir: "{app}\styles"; Flags: ignoreversion
+Source: "..\dist\generic\*"; DestDir: "{app}\generic"; Flags: ignoreversion
+Source: "..\dist\networkinformation\*"; DestDir: "{app}\networkinformation"; Flags: ignoreversion
+Source: "..\dist\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion
+Source: "..\dist\config\default_config.json"; DestDir: "{app}\config"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Gamepad Mouse Simulator"; Filename: "{app}\GamepadMouseSim.exe"

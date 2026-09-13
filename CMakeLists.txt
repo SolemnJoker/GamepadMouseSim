@@ -88,7 +88,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     src_core
     Qt6::Widgets
     Qt6::Svg
-    xinput
+    xinput1_4
     oleaut32 imm32 opengl32 version winmm
     ws2_32 uuid netapi32 userenv dwmapi
     dxgi
