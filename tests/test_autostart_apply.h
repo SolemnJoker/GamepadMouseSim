@@ -8,6 +8,7 @@
 class FakeRegistry : public IRegistry {
   public:
     bool contains(const QString& v) const override { return values.contains(v); }
+    QString value(const QString& v) const override { return values.value(v); }
     void setValue(const QString& v, const QString& val) override {
         lastWrite = v;
         values[v] = val;
@@ -32,9 +33,12 @@ class TestAutostartApply : public QObject {
     void cleanup() { setRegistryForTesting(nullptr); }
 
     void enable_writesQuotedPath();
-    void disable_removesExisting();
     void enable_whenAlreadyEnabled_idempotent();
     void disable_whenAbsent_noop();
+    void disable_removesOwnRegistration();
+    void disable_removesDeadPathResidue();
+    void disable_keepsOtherLiveRegistration();
+    void runValuePointsToCurrentExe_matchesOnlyOwnPath();
 
   private:
     FakeRegistry m_fake;

@@ -138,9 +138,18 @@ bool Application::initialize() {
         }
     });
 
-    // Apply the configured boot autostart state on every launch.
-    m_lastAutostart = m_config.value("autostart", false).toBool();
-    AutoStart::applyToRegistry(m_lastAutostart);
+    // Apply the configured boot autostart state on every launch. A Run value
+    // written by an external party (installer's optional auto-start task, or
+    // a user editing the registry) that points at this exe is adopted into
+    // the config once, so config and registry stay authoritative in one
+    // place. Stale/dead-path values are healed by the disable branch below.
+    bool wantAutostart = m_config.value("autostart", false).toBool();
+    if (!wantAutostart && AutoStart::runValuePointsToCurrentExe()) {
+        wantAutostart = true;
+        m_config.setValue("autostart", true);
+    }
+    m_lastAutostart = wantAutostart;
+    AutoStart::applyToRegistry(wantAutostart);
 
     m_gamepadPoller.start();
     m_systemTray.rebuildProfileMenu(m_config.profileOrder(), m_config.activeProfileName());

@@ -1,6 +1,7 @@
 #include "AutoStart.h"
 #include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include <QFileInfo>
 #include <QSettings>
 
@@ -28,6 +29,35 @@ QString AutoStart::executablePath() {
     return path;
 }
 
+QString AutoStart::normalizePath(const QString& quotedPath) {
+    QString p = quotedPath;
+    if (p.startsWith('"') && p.endsWith('"') && p.size() >= 2)
+        p = p.mid(1, p.size() - 2);
+    return QDir::fromNativeSeparators(p).toLower();
+}
+
+bool AutoStart::shouldRemoveOnDisable(const QString& existingValue) {
+    const QString normalized = normalizePath(existingValue);
+    if (normalized.isEmpty())
+        return false;
+    // Ours to remove: it points at this executable, or at a path that no
+    // longer exists (user moved/renamed/deleted the folder since enabling).
+    if (normalized == normalizePath(executablePath()))
+        return true;
+    return !QFileInfo::exists(QDir::toNativeSeparators(normalized));
+}
+
+bool AutoStart::runValuePointsToCurrentExe() {
+    QString existing;
+    if (IRegistry* r = registry())
+        existing = r->contains(kValueName) ? r->value(kValueName) : QString();
+    else {
+        QSettings settings(kRunKey, QSettings::NativeFormat);
+        existing = settings.value(kValueName).toString();
+    }
+    return !existing.isEmpty() && normalizePath(existing) == normalizePath(executablePath());
+}
+
 void AutoStart::applyToRegistry(bool enabled) {
     if (IRegistry* r = registry()) {
         // Test path: drive through the injected fake.
@@ -35,9 +65,12 @@ void AutoStart::applyToRegistry(bool enabled) {
             r->setValue(kValueName, "\"" + executablePath() + "\"");
             qDebug() << "Autostart enabled:" << executablePath();
         } else {
-            if (r->contains(kValueName)) {
+            const QString existing = r->contains(kValueName) ? r->value(kValueName) : QString();
+            if (shouldRemoveOnDisable(existing)) {
                 r->remove(kValueName);
-                qDebug() << "Autostart disabled";
+                qDebug() << "Autostart disabled (own or dead registration removed)";
+            } else {
+                qDebug() << "Autostart registration left untouched (other live copy):" << existing;
             }
         }
         r->sync();
@@ -51,9 +84,13 @@ void AutoStart::applyToRegistry(bool enabled) {
         settings.setValue(kValueName, "\"" + exe + "\"");
         qDebug() << "Autostart enabled:" << exe;
     } else {
-        if (settings.contains(kValueName)) {
+        const QString existing =
+            settings.contains(kValueName) ? settings.value(kValueName).toString() : QString();
+        if (shouldRemoveOnDisable(existing)) {
             settings.remove(kValueName);
-            qDebug() << "Autostart disabled";
+            qDebug() << "Autostart disabled (own or dead registration removed)";
+        } else {
+            qDebug() << "Autostart registration left untouched (other live copy):" << existing;
         }
     }
     settings.sync();
