@@ -37,6 +37,8 @@ ctest --test-dir build -C Release --output-on-failure   # 自动化测试全绿
 
 Qt 路径也可以通过 `CMAKE_PREFIX_PATH` 环境变量提供;仓库内没有任何硬编码的本机路径。构建后直接运行 `build/Release/GamepadMouseSim.exe`,配置文件会自动生成。
 
+**分发**:`powershell skills/deploy/deploy.ps1 -TargetDir <目录>` 产出自足的部署目录(Qt DLL、Qt 插件、VC++ 运行库 DLL 全部随包,裸 Windows 10/11 开箱即用,无需安装任何运行库);打包时自动排除用户数据(`config.json`/`debug.log`)。程序未做代码签名,目标机首次运行若触发 SmartScreen,点"更多信息 → 仍要运行"。
+
 ## 🎮 基本操作
 
 | 按键 | 功能 |
