@@ -19,6 +19,7 @@ class InputMapper : public QObject {
 
   signals:
     void showHelpRequested();
+    void showKeyboardRequested();
 
   private:
     Config* m_config;

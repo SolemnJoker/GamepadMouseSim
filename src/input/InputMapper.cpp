@@ -6,6 +6,8 @@ InputMapper::InputMapper(Config* config, int controllerIndex, QObject* parent)
       m_mouseMapper(config, this), m_keyboardMapper(config, this) {
     connect(&m_keyboardMapper, &KeyboardMapper::showHelpRequested, this,
             &InputMapper::showHelpRequested);
+    connect(&m_keyboardMapper, &KeyboardMapper::showKeyboardRequested, this,
+            &InputMapper::showKeyboardRequested);
 }
 
 void InputMapper::onGamepadStateChanged(int controllerIndex, const GamepadState& state) {

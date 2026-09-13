@@ -6,6 +6,8 @@
 #include "gamepad/ComboKeyDetector.h"
 #include "gamepad/GamepadPoller.h"
 #include "input/InputMapper.h"
+#include "input/KeyInjector.h"
+#include "input/KeyboardController.h"
 #include "ui/OsdOverlay.h"
 #include "ui/SystemTray.h"
 #include <QApplication>
@@ -13,6 +15,7 @@
 #include <array>
 
 class QDialog;
+class KeyboardOverlay;
 
 class Application : public QObject {
     Q_OBJECT
@@ -37,4 +40,8 @@ class Application : public QObject {
     std::array<ModeManager*, kMaxGamepads> m_modeManagers;
     QDialog* m_settingsDialog = nullptr;
     bool m_lastAutostart = false;
+
+    SendKeyInjector m_keyInjector;
+    KeyboardOverlay* m_keyboardOverlay = nullptr; // 堆上创建,Qt 父子管理
+    KeyboardController* m_keyboardController = nullptr;
 };

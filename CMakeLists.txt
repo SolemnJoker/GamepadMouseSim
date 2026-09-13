@@ -15,6 +15,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
 # Lets future tests link Config without dragging in the rest of the engine.
 add_library(src_core STATIC
     src/core/Config.cpp
+    src/core/ConfigSelftest.cpp
+    src/core/MappingDefaults.cpp
     src/core/Types.cpp
 )
 target_include_directories(src_core PUBLIC src)
@@ -36,9 +38,14 @@ set(SOURCES
     src/input/InputMapper.cpp
     src/input/MouseMapper.cpp
     src/input/KeyboardMapper.cpp
+    src/input/KeyInjector.cpp
+    src/input/KeyboardNavController.cpp
+    src/input/KeyboardController.cpp
     src/ui/SystemTray.cpp
     src/ui/OsdOverlay.cpp
+    src/ui/KeyboardOverlay.cpp
     src/ui/SettingsDialog.cpp
+    src/ui/HelpContent.cpp
     src/win/XInputWrapper.cpp
     src/win/SendInputHelper.cpp
 )
@@ -56,9 +63,14 @@ set(HEADERS
     src/input/InputMapper.h
     src/input/MouseMapper.h
     src/input/KeyboardMapper.h
+    src/input/KeyInjector.h
+    src/input/KeyboardNavController.h
+    src/input/KeyboardController.h
     src/ui/SystemTray.h
     src/ui/OsdOverlay.h
+    src/ui/KeyboardOverlay.h
     src/ui/SettingsDialog.h
+    src/ui/HelpContent.h
     src/win/XInputWrapper.h
     src/win/SendInputHelper.h
 )
@@ -67,19 +79,7 @@ set(RESOURCES
     resources/resources.qrc
 )
 
-# Pre-generate help screen image from Python script
-set(HELP_PNG "${CMAKE_SOURCE_DIR}/resources/icons/help.png")
-add_custom_command(
-    OUTPUT "${HELP_PNG}"
-    COMMAND python "${CMAKE_SOURCE_DIR}/tools/generate_help_png.py"
-    DEPENDS "${CMAKE_SOURCE_DIR}/tools/generate_help_png.py"
-    COMMENT "Generating help screen image"
-)
-add_custom_target(generate_help_png DEPENDS "${HELP_PNG}")
-
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${RESOURCES})
-add_dependencies(${PROJECT_NAME} generate_help_png)
-
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

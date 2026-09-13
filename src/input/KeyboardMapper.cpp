@@ -1,5 +1,6 @@
 #include "KeyboardMapper.h"
 #include "core/Config.h"
+#include "core/MappingDefaults.h"
 #include "win/SendInputHelper.h"
 #include <QDebug>
 #include <windows.h>
@@ -199,22 +200,19 @@ void KeyboardMapper::onConfigChanged() {
 }
 
 void KeyboardMapper::loadConfig() {
-    m_directMapping.clear();
+    // 共享默认表 ⊕ 配置覆盖(单一事实源 src/core/MappingDefaults):
+    // 缺失键保留默认,显式 "None" 按用户意图生效(design.md D2/D8)。
+    m_directMapping =
+        MappingDefaults::mergedDirect(m_config->value("mouse_mode.button_mapping").toJsonObject());
+    const QJsonObject modObj = m_config->value("mouse_mode.modifier_mapping").toJsonObject();
     m_modifierMapping.clear();
-    QJsonObject directObj = m_config->value("mouse_mode.button_mapping").toJsonObject();
-    for (auto it = directObj.begin(); it != directObj.end(); ++it)
-        m_directMapping[it.key()] = stringToAction(it.value().toString());
-    qDebug() << "Loaded" << m_directMapping.size() << "direct mappings";
-
-    QJsonObject modObj = m_config->value("mouse_mode.modifier_mapping").toJsonObject();
-    for (auto modIt = modObj.begin(); modIt != modObj.end(); ++modIt) {
-        QMap<QString, ButtonAction> layer;
-        QJsonObject layerObj = modIt.value().toObject();
-        for (auto btnIt = layerObj.begin(); btnIt != layerObj.end(); ++btnIt)
-            layer[btnIt.key()] = stringToAction(btnIt.value().toString());
-        m_modifierMapping[modIt.key()] = layer;
-        qDebug() << "Loaded" << layer.size() << "mappings for modifier" << modIt.key();
-    }
+    m_modifierMapping["LT"] = MappingDefaults::mergedLayer("LT", modObj);
+    m_modifierMapping["RT"] = MappingDefaults::mergedLayer("RT", modObj);
+    // 历史遗留 "L3" 层名照常加载(lookupAction 不读,数据不丢)。
+    if (modObj.contains("L3"))
+        m_modifierMapping["L3"] = MappingDefaults::mergedLayer("L3", modObj);
+    qDebug() << "Loaded" << m_directMapping.size() << "direct mappings," << m_modifierMapping.size()
+             << "modifier layers";
 }
 
 void KeyboardMapper::executeAction(ButtonAction action) {
@@ -387,6 +385,10 @@ void KeyboardMapper::executeAction(ButtonAction action) {
         break;
     case ButtonAction::ShowHelp: {
         emit showHelpRequested();
+        break;
+    }
+    case ButtonAction::ShowKeyboard: {
+        emit showKeyboardRequested();
         break;
     }
     case ButtonAction::KeyWin:

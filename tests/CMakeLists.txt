@@ -86,3 +86,166 @@ target_link_libraries(test_gamepad_poller PRIVATE
 add_test(NAME test_gamepad_poller COMMAND test_gamepad_poller)
 set_tests_properties(test_gamepad_poller PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# ---------------------------------------------------------------------------
+# Virtual keyboard (openspec change: add-virtual-keyboard)
+# ---------------------------------------------------------------------------
+# Navigation: pure logic driven by synthetic stick/dpad quantization; the
+# injection stream is observed through FakeKeyInjector (no real SendInput,
+# no QWidget — logic/window separation per design.md D9).
+qt_add_executable(test_keyboard_nav
+    test_keyboard_nav.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardNavController.cpp
+)
+target_link_libraries(test_keyboard_nav PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_keyboard_nav COMMAND test_keyboard_nav)
+set_tests_properties(test_keyboard_nav PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Controller: toggle open/close detection, input bypass while open, mode
+# constraints, multi-gamepad routing — against FakeOverlay + FakeKeyInjector.
+qt_add_executable(test_keyboard_controller
+    test_keyboard_controller.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardController.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardNavController.cpp
+)
+target_link_libraries(test_keyboard_controller PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_keyboard_controller COMMAND test_keyboard_controller)
+set_tests_properties(test_keyboard_controller PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Mapping defaults merge (design.md D8): old configs without the new keys
+# still dispatch ShowKeyboard via the built-in fallback table.
+qt_add_executable(test_keyboard_mapping
+    test_keyboard_mapping.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardMapper.cpp
+    ${CMAKE_SOURCE_DIR}/src/win/SendInputHelper.cpp
+)
+target_link_libraries(test_keyboard_mapping PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_keyboard_mapping COMMAND test_keyboard_mapping)
+set_tests_properties(test_keyboard_mapping PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+# MappingDefaults: single source of truth for default mappings (design D2),
+# plus consistency check of the bundled default_config.json projection.
+qt_add_executable(test_mapping_defaults
+    test_mapping_defaults.cpp
+    ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+)
+target_link_libraries(test_mapping_defaults PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_mapping_defaults COMMAND test_mapping_defaults)
+set_tests_properties(test_mapping_defaults PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Config load chain (design D1): file -> qrc builtin -> skeleton, with
+# auto-writeback of a writable config.json, and incremental v1->v2 migration.
+qt_add_executable(test_config_load_chain
+    test_config_load_chain.cpp
+    ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+)
+target_link_libraries(test_config_load_chain PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_config_load_chain COMMAND test_config_load_chain)
+set_tests_properties(test_config_load_chain PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Profiles: expansion/collect mirror semantics and management rules (design D3).
+qt_add_executable(test_config_profiles
+    test_config_profiles.cpp
+    ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+)
+target_link_libraries(test_config_profiles PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_config_profiles COMMAND test_config_profiles)
+set_tests_properties(test_config_profiles PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# ---------------------------------------------------------------------------
+# add-config-profiles-and-live-help
+# ---------------------------------------------------------------------------
+# L4 process-level selftest: the app itself verifies the full config chain
+# (qrc resource -> load chain -> migration -> profile expansion -> merged
+# view) and exits 0/1. ctest asserts the exit code.
+add_test(NAME selftest_config COMMAND $<TARGET_FILE:GamepadMouseSim> --selftest)
+set_tests_properties(selftest_config PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Help content data layer (L1): content matches the merged view and follows
+# config changes. No QWidget involved.
+qt_add_executable(test_help_content
+    test_help_content.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/HelpContent.cpp
+    ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+)
+target_link_libraries(test_help_content PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+add_test(NAME test_help_content COMMAND test_help_content)
+set_tests_properties(test_help_content PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# L3 feasibility spike: plain QWidget + grab() under offscreen QPA.
+qt_add_executable(test_offscreen_render
+    test_offscreen_render.cpp
+)
+target_link_libraries(test_offscreen_render PRIVATE
+    Qt6::Test
+    Qt6::Widgets
+)
+# D7 L3 downgrade (2026-09-13 spike): QApplication under this non-interactive
+# shell hangs on both offscreen and windows platform plugins (same root cause
+# as the tray-icon stack overflow). Binaries stay buildable for manual runs on
+# an interactive desktop; excluded from ctest per the tray-icon precedent.
+# add_test intentionally NOT called for the three render tests below.
+
+# L3 keyboard overlay: rendered grid matches widget size; highlight movement
+# changes pixels.
+qt_add_executable(test_keyboard_overlay_render
+    test_keyboard_overlay_render.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardNavController.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/KeyboardOverlay.cpp
+    ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+)
+target_link_libraries(test_keyboard_overlay_render PRIVATE
+    Qt6::Test
+    Qt6::Widgets
+    src_core
+)
+
+
+# L3 help overlay: renders content and re-renders on config change.
+qt_add_executable(test_help_overlay_render
+    test_help_overlay_render.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/HelpContent.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/OsdOverlay.cpp
+    ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+)
+target_link_libraries(test_help_overlay_render PRIVATE
+    Qt6::Test
+    Qt6::Widgets
+    src_core
+)
+

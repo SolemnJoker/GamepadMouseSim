@@ -93,6 +93,8 @@ ButtonAction stringToAction(const QString& str) {
         return ButtonAction::ScrollRight;
     if (str == "ShowHelp")
         return ButtonAction::ShowHelp;
+    if (str == "ShowKeyboard")
+        return ButtonAction::ShowKeyboard;
     return ButtonAction::None;
 }
 
@@ -190,6 +192,8 @@ QString actionToString(ButtonAction action) {
         return "ScrollRight";
     case ButtonAction::ShowHelp:
         return "ShowHelp";
+    case ButtonAction::ShowKeyboard:
+        return "ShowKeyboard";
     default:
         return "None";
     }
@@ -289,6 +293,8 @@ QString actionToChinese(ButtonAction action) {
         return "向右滚动";
     case ButtonAction::ShowHelp:
         return "显示帮助";
+    case ButtonAction::ShowKeyboard:
+        return "虚拟键盘";
     default:
         return "无";
     }

@@ -52,7 +52,8 @@ enum class ButtonAction {
     ScrollDown,
     ScrollLeft,
     ScrollRight,
-    ShowHelp
+    ShowHelp,
+    ShowKeyboard
 };
 
 struct GamepadState {
@@ -83,7 +84,7 @@ constexpr int kXInputThumbMax = 32767;         // signed thumb-stick saturation
 constexpr int kXInputTriggerMax = 255;         // unsigned trigger saturation
 constexpr int kXInputDeadzoneMax = 7849;       // XInput recommended deadzone upper bound
 constexpr int kMsPerSecond = 1000;             // seconds → milliseconds
-constexpr int kCurrentConfigSchemaVersion = 1; // bump on breaking config changes
+constexpr int kCurrentConfigSchemaVersion = 2; // bump on breaking config changes
 
 #ifndef XINPUT_GAMEPAD_DPAD_UP
 constexpr uint16_t XINPUT_GAMEPAD_DPAD_UP = 0x0001;

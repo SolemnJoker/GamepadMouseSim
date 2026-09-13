@@ -37,6 +37,15 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext& context, con
 }
 
 int main(int argc, char* argv[]) {
+    // 进程级自检(design.md D7 L4)在 GUI 栈之前运行:配置链自检不需要
+    // QApplication(offscreen 下 GUI 插件初始化曾致挂起),以退出码结束。
+    for (int i = 1; i < argc; ++i) {
+        if (qstrcmp(argv[i], "--selftest") == 0) {
+            extern bool runConfigSelftest();
+            return runConfigSelftest() ? 0 : 1;
+        }
+    }
+
     QApplication app(argc, argv);
     app.setApplicationName("GamepadMouseSim");
     app.setOrganizationName("GamepadMouseSim");

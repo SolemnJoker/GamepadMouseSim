@@ -1,5 +1,12 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "profiles": {
+    "active": "default",
+    "order": ["default"],
+    "list": {
+      "default": {}
+    }
+  },
   "monitoring": {
     "manual_switch_lockout_seconds": 3
   },
@@ -48,7 +55,8 @@
         "DpadUp": "VolumeUp",
         "DpadDown": "VolumeDown",
         "DpadLeft": "VolumeMute",
-        "R3": "ShowHelp"
+        "R3": "ShowHelp",
+        "Menu": "ShowKeyboard"
       },
       "RT": {
         "DpadRight": "None",
@@ -69,6 +77,10 @@
   "osd": {
     "enabled": true,
     "duration_seconds": 2
+  },
+  "keyboard": {
+    "nav_repeat_delay_ms": 400,
+    "nav_repeat_interval_ms": 150
   },
   "auto_switch": {
     "enabled": false,

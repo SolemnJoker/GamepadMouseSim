@@ -92,9 +92,10 @@ void TestConfigAutostart::schemaVersion_usesDefaultOnMismatch() {
 
     Config cfg(this);
     QVERIFY(cfg.load(oldCfg.fileName()));
-    // After loading, version-mismatch should trigger overwrite with default.
+    // Incremental merge (specs/config-profiles): user keys survive the
+    // schema upgrade; missing keys fall back to defaults; version bumps.
     QCOMPARE(cfg.value("schema_version", 0).toInt(), kCurrentConfigSchemaVersion);
-    QCOMPARE(cfg.value("autostart", true).toBool(), false);
+    QCOMPARE(cfg.value("autostart", false).toBool(), true);
 
     // Cleanup.
     QFile::remove(defaultPath);

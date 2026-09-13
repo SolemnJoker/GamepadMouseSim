@@ -1,10 +1,13 @@
 #include "SettingsDialog.h"
 #include "core/Config.h"
+#include "core/MappingDefaults.h"
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QVBoxLayout>
@@ -60,7 +63,8 @@ static const QVector<ButtonAction> kActionOrder = {ButtonAction::None,
                                                    ButtonAction::ScrollDown,
                                                    ButtonAction::ScrollLeft,
                                                    ButtonAction::ScrollRight,
-                                                   ButtonAction::ShowHelp};
+                                                   ButtonAction::ShowHelp,
+                                                   ButtonAction::ShowKeyboard};
 
 SettingsDialog::SettingsDialog(Config* config, QWidget* parent)
     : QDialog(parent), m_config(config) {
@@ -216,6 +220,28 @@ void SettingsDialog::buildMappingTab() {
     auto* page = new QWidget(this);
     auto* outer = new QVBoxLayout(page);
 
+    // Profile bar:选择生效方案 + 管理(设计 D6)。
+    auto* profileGroup = new QGroupBox(QStringLiteral("操作方案(Profile)"), this);
+    auto* pLayout = new QHBoxLayout(profileGroup);
+    pLayout->addWidget(new QLabel(QStringLiteral("当前方案:"), this));
+    m_profileCombo = new QComboBox(this);
+    pLayout->addWidget(m_profileCombo, 1);
+    auto* createBtn = new QPushButton(QStringLiteral("新建"), this);
+    auto* renameBtn = new QPushButton(QStringLiteral("重命名"), this);
+    auto* deleteBtn = new QPushButton(QStringLiteral("删除"), this);
+    auto* resetBtn = new QPushButton(QStringLiteral("恢复默认"), this);
+    pLayout->addWidget(createBtn);
+    pLayout->addWidget(renameBtn);
+    pLayout->addWidget(deleteBtn);
+    pLayout->addWidget(resetBtn);
+    outer->addWidget(profileGroup);
+
+    connect(m_profileCombo, &QComboBox::activated, this, &SettingsDialog::onProfileSelected);
+    connect(createBtn, &QPushButton::clicked, this, &SettingsDialog::onProfileCreate);
+    connect(renameBtn, &QPushButton::clicked, this, &SettingsDialog::onProfileRename);
+    connect(deleteBtn, &QPushButton::clicked, this, &SettingsDialog::onProfileDelete);
+    connect(resetBtn, &QPushButton::clicked, this, &SettingsDialog::onResetProfileDefaults);
+
     auto* directGroup = new QGroupBox(QStringLiteral("直接映射"), this);
     auto* dg = new QFormLayout(directGroup);
     // Direct mapping applies to all 16 logical buttons.
@@ -328,6 +354,9 @@ void SettingsDialog::buildAutoSwitchTab() {
 // Load / Save
 // ============================================================
 void SettingsDialog::loadValues() {
+    // Profiles
+    reloadProfileCombo();
+
     // General
     m_lockoutSec->setValue(m_config->value("monitoring.manual_switch_lockout_seconds", 3).toInt());
     m_holdMs->setValue(m_config->value("combo_key.hold_duration_ms", 1000).toInt());
@@ -358,21 +387,22 @@ void SettingsDialog::loadValues() {
         m_config->value("mouse_mode.right_stick.scroll_speed_horizontal", 1.0).toDouble());
     m_rightDeadzone->setValue(m_config->value("mouse_mode.right_stick.deadzone", 0.15).toDouble());
 
-    // Mappings - direct
-    QJsonObject direct = m_config->value("mouse_mode.button_mapping").toJsonObject();
+    // Mappings - merged view(共享默认表 ⊕ 配置,design D2/D6):缺失键
+    // 显示默认动作,保存所见即所得,不再显示整页"无"。
+    const auto direct = MappingDefaults::mergedDirect(
+        m_config->value("mouse_mode.button_mapping").toJsonValue().toObject());
     for (auto it = m_directCombos.begin(); it != m_directCombos.end(); ++it) {
-        QString cur = direct.value(it.key()).toString("None");
-        fillActionCombo(it.value(), cur);
+        fillActionCombo(it.value(), actionToString(direct.value(it.key())));
     }
-    QJsonObject l3Obj = m_config->value("mouse_mode.modifier_mapping.L3").toJsonObject();
+    const QJsonObject modObj =
+        m_config->value("mouse_mode.modifier_mapping").toJsonValue().toObject();
+    const auto l3Layer = MappingDefaults::mergedLayer("LT", modObj);
     for (auto it = m_l3Combos.begin(); it != m_l3Combos.end(); ++it) {
-        QString cur = l3Obj.value(it.key()).toString("None");
-        fillActionCombo(it.value(), cur);
+        fillActionCombo(it.value(), actionToString(l3Layer.value(it.key())));
     }
-    QJsonObject rtObj = m_config->value("mouse_mode.modifier_mapping.RT").toJsonObject();
+    const auto rtLayer = MappingDefaults::mergedLayer("RT", modObj);
     for (auto it = m_rtCombos.begin(); it != m_rtCombos.end(); ++it) {
-        QString cur = rtObj.value(it.key()).toString("None");
-        fillActionCombo(it.value(), cur);
+        fillActionCombo(it.value(), actionToString(rtLayer.value(it.key())));
     }
 
     // Auto-switch
@@ -441,7 +471,8 @@ void SettingsDialog::saveValues() {
     for (auto it = m_l3Combos.begin(); it != m_l3Combos.end(); ++it) {
         l3[it.key()] = comboAction(it.value());
     }
-    m_config->setValue("mouse_mode.modifier_mapping.L3", l3);
+    // Write under the runtime layer name "LT" (see loadValues note above).
+    m_config->setValue("mouse_mode.modifier_mapping.LT", l3);
 
     QJsonObject rt;
     for (auto it = m_rtCombos.begin(); it != m_rtCombos.end(); ++it) {
@@ -468,7 +499,98 @@ void SettingsDialog::saveValues() {
     m_config->setValue("auto_switch.detection.gpu_threshold", m_gpuThreshold->value());
     m_config->setValue("auto_switch.detection.gpu_sustained_seconds", m_gpuSustained->value());
 
+    // Keep the active profile's stored copy in sync with what we just wrote
+    // to mouse_mode.* (design D3 mirror discipline).
+    m_config->updateActiveProfileFromMouseMode();
+
     m_config->endBatch();
+}
+
+void SettingsDialog::reloadProfileCombo() {
+    if (!m_profileCombo)
+        return;
+    m_profileComboUpdating = true;
+    m_profileCombo->clear();
+    m_profileCombo->addItems(m_config->profileOrder());
+    const int idx = m_profileCombo->findText(m_config->activeProfileName());
+    if (idx >= 0)
+        m_profileCombo->setCurrentIndex(idx);
+    m_profileComboUpdating = false;
+}
+
+void SettingsDialog::onProfileSelected() {
+    if (m_profileComboUpdating)
+        return;
+    const QString name = m_profileCombo->currentText();
+    if (name.isEmpty() || name == m_config->activeProfileName())
+        return;
+    m_config->setActiveProfile(name); // 展开 → configChanged 热广播
+    loadValues();                     // 显示新方案的合并视图
+}
+
+void SettingsDialog::onProfileCreate() {
+    bool ok = false;
+    QString name =
+        QInputDialog::getText(this, QStringLiteral("新建操作方案"), QStringLiteral("方案名称:"),
+                              QLineEdit::Normal, QStringLiteral("新方案"), &ok);
+    if (!ok)
+        return;
+    name = name.trimmed();
+    if (!m_config->createProfile(name)) {
+        QMessageBox::warning(this, QStringLiteral("新建操作方案"),
+                             QStringLiteral("无法创建:名称为空或已存在。"));
+        return;
+    }
+    m_config->setActiveProfile(name);
+    reloadProfileCombo();
+}
+
+void SettingsDialog::onProfileRename() {
+    const QString oldName = m_config->activeProfileName();
+    bool ok = false;
+    QString name =
+        QInputDialog::getText(this, QStringLiteral("重命名操作方案"), QStringLiteral("新名称:"),
+                              QLineEdit::Normal, oldName, &ok);
+    if (!ok)
+        return;
+    name = name.trimmed();
+    if (!m_config->renameProfile(oldName, name)) {
+        QMessageBox::warning(this, QStringLiteral("重命名操作方案"),
+                             QStringLiteral("无法重命名:新名称为空或已存在。"));
+        return;
+    }
+    reloadProfileCombo();
+}
+
+void SettingsDialog::onProfileDelete() {
+    const QString name = m_config->activeProfileName();
+    if (QMessageBox::question(this, QStringLiteral("删除操作方案"),
+                              QStringLiteral("删除方案 \"%1\"?").arg(name)) != QMessageBox::Yes)
+        return;
+    if (!m_config->removeProfile(name)) {
+        QMessageBox::warning(this, QStringLiteral("删除操作方案"),
+                             QStringLiteral("至少需要保留一套方案。"));
+        return;
+    }
+    reloadProfileCombo();
+    loadValues();
+}
+
+void SettingsDialog::onResetProfileDefaults() {
+    const QString name = m_config->activeProfileName();
+    if (QMessageBox::question(this, QStringLiteral("恢复默认"),
+                              QStringLiteral("将方案 \"%1\" 的全部映射恢复为默认?").arg(name)) !=
+        QMessageBox::Yes)
+        return;
+    m_config->beginBatch();
+    m_config->setValue("mouse_mode.button_mapping", MappingDefaults::directDefaultsJson());
+    QJsonObject mods;
+    mods["LT"] = MappingDefaults::ltLayerDefaultsJson();
+    mods["RT"] = MappingDefaults::rtLayerDefaultsJson();
+    m_config->setValue("mouse_mode.modifier_mapping", mods);
+    m_config->endBatch();
+    m_config->updateActiveProfileFromMouseMode();
+    loadValues();
 }
 
 void SettingsDialog::accept() {

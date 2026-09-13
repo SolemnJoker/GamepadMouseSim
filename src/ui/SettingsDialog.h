@@ -26,6 +26,12 @@ class SettingsDialog : public QDialog {
   private slots:
     void accept() override;
 
+    void onProfileSelected();
+    void onProfileCreate();
+    void onProfileRename();
+    void onProfileDelete();
+    void onResetProfileDefaults();
+
   private:
     void buildGeneralTab();
     void buildStickTab();
@@ -35,6 +41,8 @@ class SettingsDialog : public QDialog {
     void loadValues();
     void saveValues();
 
+    void reloadProfileCombo();
+
     // Populate a mapping combo with the full ButtonAction set, selecting `current`.
     void fillActionCombo(QComboBox* combo, const QString& currentAction);
     QString comboAction(const QComboBox* combo) const;
@@ -42,6 +50,10 @@ class SettingsDialog : public QDialog {
     Config* m_config;
 
     QTabWidget* m_tabs = nullptr;
+
+    // --- Profile bar (mapping tab top) ---
+    QComboBox* m_profileCombo = nullptr;
+    bool m_profileComboUpdating = false;
 
     // --- General tab ---
     QSpinBox* m_lockoutSec = nullptr;

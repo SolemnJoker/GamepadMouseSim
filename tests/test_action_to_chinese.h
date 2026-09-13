@@ -7,4 +7,5 @@ class TestActionToChinese : public QObject {
     Q_OBJECT
   private slots:
     void allActions_haveNonEmptyMapping();
+    void stringAction_roundTrip_forAllActions();
 };

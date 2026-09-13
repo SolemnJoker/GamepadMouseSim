@@ -5,6 +5,17 @@
 #include <QPainterPath>
 #include <QSvgRenderer>
 
+void fillProfileMenu(QMenu* menu, const QStringList& order, const QString& active) {
+    menu->clear();
+    for (const QString& name : order) {
+        QAction* action = menu->addAction(name);
+        action->setCheckable(true);
+        action->setChecked(name == active);
+    }
+    if (order.isEmpty())
+        menu->addAction(QStringLiteral("(无)"))->setEnabled(false);
+}
+
 SystemTray::SystemTray(QObject* parent) : QObject(parent) {
     std::fill(m_padModes.begin(), m_padModes.end(), GamepadMode::Default);
     std::fill(m_padConnected.begin(), m_padConnected.end(), false);
@@ -12,6 +23,13 @@ SystemTray::SystemTray(QObject* parent) : QObject(parent) {
     m_statusAction = m_menu.addAction("模式: 默认");
     m_statusAction->setEnabled(false);
     m_menu.addSeparator();
+
+    // 操作方案子菜单(构建逻辑在 fillProfileMenu 纯函数中,便于单测)。
+    m_profileMenu.setTitle(QStringLiteral("操作方案"));
+    m_profileMenuAction = m_menu.addMenu(&m_profileMenu);
+
+    QAction* restoreAction = m_menu.addAction(QStringLiteral("恢复默认配置"));
+    connect(restoreAction, &QAction::triggered, this, &SystemTray::restoreDefaultsRequested);
 
     m_settingsAction = m_menu.addAction(QStringLiteral("设置..."));
     connect(m_settingsAction, &QAction::triggered, this, &SystemTray::settingsRequested);
@@ -46,6 +64,18 @@ void SystemTray::show() {
 
 void SystemTray::hide() {
     m_trayIcon.hide();
+}
+
+void SystemTray::rebuildProfileMenu(const QStringList& order, const QString& active) {
+    fillProfileMenu(&m_profileMenu, order, active);
+    for (QAction* action : m_profileMenu.actions()) {
+        if (!action->isCheckable())
+            continue;
+        const QString name = action->text();
+        connect(
+            action, &QAction::triggered, this,
+            [this, name]() { emit profileSwitchRequested(name); }, Qt::UniqueConnection);
+    }
 }
 
 void SystemTray::onModeChanged(int controllerIndex, GamepadMode mode) {

@@ -23,6 +23,7 @@ class KeyboardMapper : public QObject {
   signals:
     void scrollRequested(float dx, float dy);
     void showHelpRequested();
+    void showKeyboardRequested();
 
   private:
     void loadConfig();
