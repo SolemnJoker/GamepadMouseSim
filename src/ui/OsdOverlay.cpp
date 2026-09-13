@@ -1,4 +1,5 @@
 #include "OsdOverlay.h"
+#include "core/Translations.h"
 #include "core/Config.h"
 #include <QDebug>
 #include <QGuiApplication>
@@ -134,7 +135,7 @@ void OsdOverlay::drawHelp(QPainter& painter, const QRect& rect) const {
     painter.setFont(
         QFont(QStringLiteral("Microsoft YaHei"), qMax(12, rect.height() / 30), QFont::Bold));
     painter.drawText(QRect(padding, padding / 2, rect.width(), contentTop - padding),
-                     Qt::AlignVCenter | Qt::AlignHCenter, QStringLiteral("手柄鼠标模拟器"));
+                     Qt::AlignVCenter | Qt::AlignHCenter, Translations::tr("手柄鼠标模拟器"));
 
     const int columns[3] = {0, 2, 3};
     const int extraForColumn[3][2] = {{1, 4}, {-1, -1}, {5, -1}};

@@ -1,5 +1,6 @@
 #include "SettingsDialog.h"
 #include "core/Config.h"
+#include "core/Translations.h"
 #include "core/MappingDefaults.h"
 #include <QDebug>
 #include <QDialogButtonBox>
@@ -68,7 +69,7 @@ static const QVector<ButtonAction> kActionOrder = {ButtonAction::None,
 
 SettingsDialog::SettingsDialog(Config* config, QWidget* parent)
     : QDialog(parent), m_config(config) {
-    setWindowTitle(QStringLiteral("设置"));
+    setWindowTitle(Translations::tr("设置"));
     setMinimumSize(560, 520);
 
     auto* root = new QVBoxLayout(this);
@@ -82,8 +83,8 @@ SettingsDialog::SettingsDialog(Config* config, QWidget* parent)
     buildAutoSwitchTab();
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    btns->button(QDialogButtonBox::Ok)->setText(QStringLiteral("确定"));
-    btns->button(QDialogButtonBox::Cancel)->setText(QStringLiteral("取消"));
+    btns->button(QDialogButtonBox::Ok)->setText(Translations::tr("确定"));
+    btns->button(QDialogButtonBox::Cancel)->setText(Translations::tr("取消"));
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
     root->addWidget(btns);
@@ -117,11 +118,11 @@ void SettingsDialog::buildGeneralTab() {
 
     m_lockoutSec = new QSpinBox(this);
     m_lockoutSec->setRange(0, 60);
-    m_lockoutSec->setSuffix(QStringLiteral(" 秒"));
-    form->addRow(QStringLiteral("手动切换冷却时间:"), m_lockoutSec);
+    m_lockoutSec->setSuffix(Translations::tr(" 秒"));
+    form->addRow(Translations::tr("手动切换冷却时间:"), m_lockoutSec);
 
     // Combo key buttons: multi-select list
-    auto* comboGroup = new QGroupBox(QStringLiteral("模式切换组合键"), this);
+    auto* comboGroup = new QGroupBox(Translations::tr("模式切换组合键"), this);
     auto* cgLayout = new QVBoxLayout(comboGroup);
     m_comboButtons = new QListWidget(this);
     m_comboButtons->setSelectionMode(QAbstractItemView::MultiSelection);
@@ -130,32 +131,44 @@ void SettingsDialog::buildGeneralTab() {
     }
     m_comboButtons->setMaximumHeight(160);
     cgLayout->addWidget(
-        new QLabel(QStringLiteral("按住以下按键切换模式（可多选，通常选 2 个）:"), this));
+        new QLabel(Translations::tr("按住以下按键切换模式（可多选，通常选 2 个）:"), this));
     cgLayout->addWidget(m_comboButtons);
 
     m_holdMs = new QSpinBox(this);
     m_holdMs->setRange(100, 5000);
     m_holdMs->setSingleStep(100);
-    m_holdMs->setSuffix(QStringLiteral(" 毫秒"));
-    cgLayout->addWidget(new QLabel(QStringLiteral("长按持续时间:"), this));
+    m_holdMs->setSuffix(Translations::tr(" 毫秒"));
+    cgLayout->addWidget(new QLabel(Translations::tr("长按持续时间:"), this));
     cgLayout->addWidget(m_holdMs);
     form->addRow(comboGroup);
 
-    auto* osdGroup = new QGroupBox(QStringLiteral("OSD 通知"), this);
+    auto* osdGroup = new QGroupBox(Translations::tr("OSD 通知"), this);
     auto* ogLayout = new QVBoxLayout(osdGroup);
-    m_osdEnabled = new QCheckBox(QStringLiteral("启用 OSD 通知"), this);
+    m_osdEnabled = new QCheckBox(Translations::tr("启用 OSD 通知"), this);
     ogLayout->addWidget(m_osdEnabled);
     m_osdDuration = new QSpinBox(this);
     m_osdDuration->setRange(1, 10);
-    m_osdDuration->setSuffix(QStringLiteral(" 秒"));
-    ogLayout->addWidget(new QLabel(QStringLiteral("OSD 显示时长:"), this));
+    m_osdDuration->setSuffix(Translations::tr(" 秒"));
+    ogLayout->addWidget(new QLabel(Translations::tr("OSD 显示时长:"), this));
     ogLayout->addWidget(m_osdDuration);
     form->addRow(osdGroup);
 
-    m_autostart = new QCheckBox(QStringLiteral("开机自动启动"), this);
+    m_autostart = new QCheckBox(Translations::tr("开机自动启动"), this);
     form->addRow(m_autostart);
 
-    m_tabs->addTab(page, QStringLiteral("常规"));
+    // 界面语言(design D3):选择即写入配置并热广播;对话框自身重开生效。
+    m_languageCombo = new QComboBox(this);
+    m_languageCombo->addItem(Translations::tr("跟随系统"), "system");
+    m_languageCombo->addItem(QStringLiteral("中文"), "zh");
+    m_languageCombo->addItem(QStringLiteral("English"), "en");
+    form->addRow(Translations::tr("界面语言:"), m_languageCombo);
+    m_languageHint = new QLabel(Translations::tr("语言将在重新打开设置后完全生效。"), this);
+    m_languageHint->setWordWrap(true);
+    m_languageHint->setVisible(false);
+    form->addRow(m_languageHint);
+    connect(m_languageCombo, &QComboBox::activated, this, &SettingsDialog::onLanguageChanged);
+
+    m_tabs->addTab(page, Translations::tr("常规"));
 }
 
 // ============================================================
@@ -165,41 +178,41 @@ void SettingsDialog::buildStickTab() {
     auto* page = new QWidget(this);
     auto* form = new QFormLayout(page);
 
-    auto* leftGroup = new QGroupBox(QStringLiteral("左摇杆（移动鼠标）"), this);
+    auto* leftGroup = new QGroupBox(Translations::tr("左摇杆（移动鼠标）"), this);
     auto* lg = new QFormLayout(leftGroup);
     m_sensX = new QDoubleSpinBox(this);
     m_sensX->setRange(0.1, 10.0);
     m_sensX->setSingleStep(0.1);
-    lg->addRow(QStringLiteral("X 灵敏度:"), m_sensX);
+    lg->addRow(Translations::tr("X 灵敏度:"), m_sensX);
     m_sensY = new QDoubleSpinBox(this);
     m_sensY->setRange(0.1, 10.0);
     m_sensY->setSingleStep(0.1);
-    lg->addRow(QStringLiteral("Y 灵敏度:"), m_sensY);
+    lg->addRow(Translations::tr("Y 灵敏度:"), m_sensY);
     m_leftDeadzone = new QDoubleSpinBox(this);
     m_leftDeadzone->setRange(0.0, 0.5);
     m_leftDeadzone->setSingleStep(0.01);
-    lg->addRow(QStringLiteral("死区:"), m_leftDeadzone);
-    m_acceleration = new QCheckBox(QStringLiteral("启用鼠标加速"), this);
+    lg->addRow(Translations::tr("死区:"), m_leftDeadzone);
+    m_acceleration = new QCheckBox(Translations::tr("启用鼠标加速"), this);
     lg->addRow(m_acceleration);
     form->addRow(leftGroup);
 
-    auto* rightGroup = new QGroupBox(QStringLiteral("右摇杆（滚动）"), this);
+    auto* rightGroup = new QGroupBox(Translations::tr("右摇杆（滚动）"), this);
     auto* rg = new QFormLayout(rightGroup);
     m_scrollV = new QDoubleSpinBox(this);
     m_scrollV->setRange(0.1, 10.0);
     m_scrollV->setSingleStep(0.1);
-    rg->addRow(QStringLiteral("垂直滚动速度:"), m_scrollV);
+    rg->addRow(Translations::tr("垂直滚动速度:"), m_scrollV);
     m_scrollH = new QDoubleSpinBox(this);
     m_scrollH->setRange(0.1, 10.0);
     m_scrollH->setSingleStep(0.1);
-    rg->addRow(QStringLiteral("水平滚动速度:"), m_scrollH);
+    rg->addRow(Translations::tr("水平滚动速度:"), m_scrollH);
     m_rightDeadzone = new QDoubleSpinBox(this);
     m_rightDeadzone->setRange(0.0, 0.5);
     m_rightDeadzone->setSingleStep(0.01);
-    rg->addRow(QStringLiteral("死区:"), m_rightDeadzone);
+    rg->addRow(Translations::tr("死区:"), m_rightDeadzone);
     form->addRow(rightGroup);
 
-    m_tabs->addTab(page, QStringLiteral("摇杆灵敏度"));
+    m_tabs->addTab(page, Translations::tr("摇杆灵敏度"));
 }
 
 // ============================================================
@@ -221,15 +234,15 @@ void SettingsDialog::buildMappingTab() {
     auto* outer = new QVBoxLayout(page);
 
     // Profile bar:选择生效方案 + 管理(设计 D6)。
-    auto* profileGroup = new QGroupBox(QStringLiteral("操作方案(Profile)"), this);
+    auto* profileGroup = new QGroupBox(Translations::tr("操作方案(Profile)"), this);
     auto* pLayout = new QHBoxLayout(profileGroup);
-    pLayout->addWidget(new QLabel(QStringLiteral("当前方案:"), this));
+    pLayout->addWidget(new QLabel(Translations::tr("当前方案:"), this));
     m_profileCombo = new QComboBox(this);
     pLayout->addWidget(m_profileCombo, 1);
-    auto* createBtn = new QPushButton(QStringLiteral("新建"), this);
-    auto* renameBtn = new QPushButton(QStringLiteral("重命名"), this);
-    auto* deleteBtn = new QPushButton(QStringLiteral("删除"), this);
-    auto* resetBtn = new QPushButton(QStringLiteral("恢复默认"), this);
+    auto* createBtn = new QPushButton(Translations::tr("新建"), this);
+    auto* renameBtn = new QPushButton(Translations::tr("重命名"), this);
+    auto* deleteBtn = new QPushButton(Translations::tr("删除"), this);
+    auto* resetBtn = new QPushButton(Translations::tr("恢复默认"), this);
     pLayout->addWidget(createBtn);
     pLayout->addWidget(renameBtn);
     pLayout->addWidget(deleteBtn);
@@ -242,14 +255,14 @@ void SettingsDialog::buildMappingTab() {
     connect(deleteBtn, &QPushButton::clicked, this, &SettingsDialog::onProfileDelete);
     connect(resetBtn, &QPushButton::clicked, this, &SettingsDialog::onResetProfileDefaults);
 
-    auto* directGroup = new QGroupBox(QStringLiteral("直接映射"), this);
+    auto* directGroup = new QGroupBox(Translations::tr("直接映射"), this);
     auto* dg = new QFormLayout(directGroup);
     // Direct mapping applies to all 16 logical buttons.
     addMappingRow(dg, kAllButtons, m_directCombos, this,
                   [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
     outer->addWidget(directGroup);
 
-    auto* l3Group = new QGroupBox(QStringLiteral("L3 层（按住 L3）"), this);
+    auto* l3Group = new QGroupBox(Translations::tr("L3 层（按住 L3）"), this);
     auto* l3g = new QFormLayout(l3Group);
     // L3 layer buttons: all except L3 itself
     QStringList l3Btns = kAllButtons;
@@ -258,7 +271,7 @@ void SettingsDialog::buildMappingTab() {
                   [this](QComboBox* c, const QString& cur) { fillActionCombo(c, cur); });
     outer->addWidget(l3Group);
 
-    auto* rtGroup = new QGroupBox(QStringLiteral("RT 层（按住 RT）"), this);
+    auto* rtGroup = new QGroupBox(Translations::tr("RT 层（按住 RT）"), this);
     auto* rtg = new QFormLayout(rtGroup);
     QStringList rtBtns = kAllButtons;
     rtBtns.removeAll("RT");
@@ -274,7 +287,7 @@ void SettingsDialog::buildMappingTab() {
     scroll->setWidgetResizable(true);
     scroll->setWidget(page);
 
-    m_tabs->addTab(scroll, QStringLiteral("按键映射"));
+    m_tabs->addTab(scroll, Translations::tr("按键映射"));
 }
 
 // ============================================================
@@ -284,70 +297,71 @@ void SettingsDialog::buildAutoSwitchTab() {
     auto* page = new QWidget(this);
     auto* form = new QFormLayout(page);
 
-    m_asEnabled = new QCheckBox(QStringLiteral("启用自动切换模式"), this);
+    m_asEnabled = new QCheckBox(Translations::tr("启用自动切换模式"), this);
     form->addRow(m_asEnabled);
 
     m_asInterval = new QSpinBox(this);
     m_asInterval->setRange(1, 300);
-    m_asInterval->setSuffix(QStringLiteral(" 秒"));
-    form->addRow(QStringLiteral("检测间隔:"), m_asInterval);
+    m_asInterval->setSuffix(Translations::tr(" 秒"));
+    form->addRow(Translations::tr("检测间隔:"), m_asInterval);
 
     auto* info = new QLabel(
-        QStringLiteral("规则：仅在<b>鼠标模式</b>下检测；检测到玩游戏时自动切到<b>默认模式</b>。"
-                       "<b>默认模式</b>不会被自动改变，需手动切回鼠标模式。"),
+        Translations::tr("规则：仅在<b>鼠标模式</b>下检测；检测到玩游戏时自动切到<b>默认模式</b>。"
+                         "<b>默认模式</b>不会被自动改变，需手动切回鼠标模式。"),
         this);
     info->setWordWrap(true);
     form->addRow(info);
 
-    auto* procGroup = new QGroupBox(QStringLiteral("游戏进程检测"), this);
+    auto* procGroup = new QGroupBox(Translations::tr("游戏进程检测"), this);
     auto* pg = new QVBoxLayout(procGroup);
-    m_procEnabled = new QCheckBox(QStringLiteral("启用（命中配置的游戏进程即视为在玩游戏）"), this);
+    m_procEnabled =
+        new QCheckBox(Translations::tr("启用（命中配置的游戏进程即视为在玩游戏）"), this);
     pg->addWidget(m_procEnabled);
-    pg->addWidget(new QLabel(QStringLiteral("游戏进程名（每行一个，例如 game.exe）:"), this));
+    pg->addWidget(new QLabel(Translations::tr("游戏进程名（每行一个，例如 game.exe）:"), this));
     m_procNames = new QPlainTextEdit(this);
     m_procNames->setMaximumHeight(120);
     pg->addWidget(m_procNames);
     form->addRow(procGroup);
 
-    auto* fsGroup = new QGroupBox(QStringLiteral("全屏窗口检测"), this);
+    auto* fsGroup = new QGroupBox(Translations::tr("全屏窗口检测"), this);
     auto* fsg = new QVBoxLayout(fsGroup);
-    m_fsEnabled = new QCheckBox(QStringLiteral("前台窗口全屏时视为在玩游戏"), this);
+    m_fsEnabled = new QCheckBox(Translations::tr("前台窗口全屏时视为在玩游戏"), this);
     fsg->addWidget(m_fsEnabled);
     form->addRow(fsGroup);
 
-    auto* cpuGroup = new QGroupBox(QStringLiteral("CPU 占用检测"), this);
+    auto* cpuGroup = new QGroupBox(Translations::tr("CPU 占用检测"), this);
     auto* cpg = new QFormLayout(cpuGroup);
-    m_cpuEnabled = new QCheckBox(QStringLiteral("启用"), this);
+    m_cpuEnabled = new QCheckBox(Translations::tr("启用"), this);
     cpg->addRow(m_cpuEnabled);
     m_cpuThreshold = new QDoubleSpinBox(this);
     m_cpuThreshold->setRange(1.0, 99.0);
     m_cpuThreshold->setSuffix(QStringLiteral(" %"));
-    cpg->addRow(QStringLiteral("CPU 占用阈值:"), m_cpuThreshold);
+    cpg->addRow(Translations::tr("CPU 占用阈值:"), m_cpuThreshold);
     m_cpuSustained = new QSpinBox(this);
     m_cpuSustained->setRange(1, 600);
-    m_cpuSustained->setSuffix(QStringLiteral(" 秒"));
-    cpg->addRow(QStringLiteral("持续时长（超过此时长才触发）:"), m_cpuSustained);
+    m_cpuSustained->setSuffix(Translations::tr(" 秒"));
+    cpg->addRow(Translations::tr("持续时长（超过此时长才触发）:"), m_cpuSustained);
     form->addRow(cpuGroup);
 
-    auto* gpuGroup = new QGroupBox(QStringLiteral("GPU 占用检测（近似值）"), this);
+    auto* gpuGroup = new QGroupBox(Translations::tr("GPU 占用检测（近似值）"), this);
     auto* gpg = new QFormLayout(gpuGroup);
-    m_gpuEnabled = new QCheckBox(QStringLiteral("启用"), this);
+    m_gpuEnabled = new QCheckBox(Translations::tr("启用"), this);
     gpg->addRow(m_gpuEnabled);
     m_gpuThreshold = new QDoubleSpinBox(this);
     m_gpuThreshold->setRange(1.0, 99.0);
     m_gpuThreshold->setSuffix(QStringLiteral(" %"));
-    gpg->addRow(QStringLiteral("GPU 占用阈值:"), m_gpuThreshold);
+    gpg->addRow(Translations::tr("GPU 占用阈值:"), m_gpuThreshold);
     m_gpuSustained = new QSpinBox(this);
     m_gpuSustained->setRange(1, 600);
-    m_gpuSustained->setSuffix(QStringLiteral(" 秒"));
-    gpg->addRow(QStringLiteral("持续时长:"), m_gpuSustained);
+    m_gpuSustained->setSuffix(Translations::tr(" 秒"));
+    gpg->addRow(Translations::tr("持续时长:"), m_gpuSustained);
     m_gpuHint = new QLabel(
-        QStringLiteral("提示：GPU 占用为近似值，依赖驱动支持；不同硬件可能不可用。"), this);
+        Translations::tr("提示：GPU 占用为近似值，依赖驱动支持；不同硬件可能不可用。"), this);
     m_gpuHint->setWordWrap(true);
     gpg->addRow(m_gpuHint);
     form->addRow(gpuGroup);
 
-    m_tabs->addTab(page, QStringLiteral("自动切换"));
+    m_tabs->addTab(page, Translations::tr("自动切换"));
 }
 
 // ============================================================
@@ -374,6 +388,12 @@ void SettingsDialog::loadValues() {
     m_osdEnabled->setChecked(m_config->value("osd.enabled", true).toBool());
     m_osdDuration->setValue(m_config->value("osd.duration_seconds", 2).toInt());
     m_autostart->setChecked(m_config->value("autostart", false).toBool());
+    {
+        const int idx = m_languageCombo->findData(
+            m_config->value("ui.language", QStringLiteral("system")).toString());
+        m_languageCombo->setCurrentIndex(idx >= 0 ? idx : 0);
+        m_languageHint->setVisible(false);
+    }
 
     // Stick
     m_sensX->setValue(m_config->value("mouse_mode.left_stick.sensitivity_x", 1.0).toDouble());
@@ -531,14 +551,14 @@ void SettingsDialog::onProfileSelected() {
 void SettingsDialog::onProfileCreate() {
     bool ok = false;
     QString name =
-        QInputDialog::getText(this, QStringLiteral("新建操作方案"), QStringLiteral("方案名称:"),
-                              QLineEdit::Normal, QStringLiteral("新方案"), &ok);
+        QInputDialog::getText(this, Translations::tr("新建操作方案"), Translations::tr("方案名称:"),
+                              QLineEdit::Normal, Translations::tr("新方案"), &ok);
     if (!ok)
         return;
     name = name.trimmed();
     if (!m_config->createProfile(name)) {
-        QMessageBox::warning(this, QStringLiteral("新建操作方案"),
-                             QStringLiteral("无法创建:名称为空或已存在。"));
+        QMessageBox::warning(this, Translations::tr("新建操作方案"),
+                             Translations::tr("无法创建:名称为空或已存在。"));
         return;
     }
     m_config->setActiveProfile(name);
@@ -549,14 +569,14 @@ void SettingsDialog::onProfileRename() {
     const QString oldName = m_config->activeProfileName();
     bool ok = false;
     QString name =
-        QInputDialog::getText(this, QStringLiteral("重命名操作方案"), QStringLiteral("新名称:"),
+        QInputDialog::getText(this, Translations::tr("重命名操作方案"), Translations::tr("新名称:"),
                               QLineEdit::Normal, oldName, &ok);
     if (!ok)
         return;
     name = name.trimmed();
     if (!m_config->renameProfile(oldName, name)) {
-        QMessageBox::warning(this, QStringLiteral("重命名操作方案"),
-                             QStringLiteral("无法重命名:新名称为空或已存在。"));
+        QMessageBox::warning(this, Translations::tr("重命名操作方案"),
+                             Translations::tr("无法重命名:新名称为空或已存在。"));
         return;
     }
     reloadProfileCombo();
@@ -564,12 +584,12 @@ void SettingsDialog::onProfileRename() {
 
 void SettingsDialog::onProfileDelete() {
     const QString name = m_config->activeProfileName();
-    if (QMessageBox::question(this, QStringLiteral("删除操作方案"),
-                              QStringLiteral("删除方案 \"%1\"?").arg(name)) != QMessageBox::Yes)
+    if (QMessageBox::question(this, Translations::tr("删除操作方案"),
+                              Translations::tr("删除方案 \"%1\"?").arg(name)) != QMessageBox::Yes)
         return;
     if (!m_config->removeProfile(name)) {
-        QMessageBox::warning(this, QStringLiteral("删除操作方案"),
-                             QStringLiteral("至少需要保留一套方案。"));
+        QMessageBox::warning(this, Translations::tr("删除操作方案"),
+                             Translations::tr("至少需要保留一套方案。"));
         return;
     }
     reloadProfileCombo();
@@ -578,8 +598,8 @@ void SettingsDialog::onProfileDelete() {
 
 void SettingsDialog::onResetProfileDefaults() {
     const QString name = m_config->activeProfileName();
-    if (QMessageBox::question(this, QStringLiteral("恢复默认"),
-                              QStringLiteral("将方案 \"%1\" 的全部映射恢复为默认?").arg(name)) !=
+    if (QMessageBox::question(this, Translations::tr("恢复默认"),
+                              Translations::tr("将方案 \"%1\" 的全部映射恢复为默认?").arg(name)) !=
         QMessageBox::Yes)
         return;
     m_config->beginBatch();
@@ -591,6 +611,14 @@ void SettingsDialog::onResetProfileDefaults() {
     m_config->endBatch();
     m_config->updateActiveProfileFromMouseMode();
     loadValues();
+}
+
+void SettingsDialog::onLanguageChanged() {
+    m_config->setValue("ui.language", m_languageCombo->currentData().toString());
+    // 提示用"当前(旧)语言"呈现——热广播 300ms 后才切换语言,对话框文案
+    // 在重开后更新(spec: 设置对话框边界)。
+    m_languageHint->setText(Translations::tr("语言将在重新打开设置后完全生效。"));
+    m_languageHint->setVisible(true);
 }
 
 void SettingsDialog::accept() {

@@ -78,6 +78,9 @@
     "enabled": true,
     "duration_seconds": 2
   },
+  "ui": {
+    "language": "system"
+  },
   "keyboard": {
     "nav_repeat_delay_ms": 400,
     "nav_repeat_interval_ms": 150

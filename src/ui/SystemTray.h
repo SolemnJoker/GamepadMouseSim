@@ -21,6 +21,8 @@ class SystemTray : public QObject {
     QIcon trayIcon() const { return m_trayIcon.icon(); }
 
     void rebuildProfileMenu(const QStringList& order, const QString& active);
+    // 语言切换后重建整菜单文案(含固定项;status/tooltip 由 updateTooltip 刷新)。
+    void rebuildMenu();
 
   public slots:
     void onModeChanged(int controllerIndex, GamepadMode mode);
@@ -51,6 +53,7 @@ class SystemTray : public QObject {
     QAction* m_pauseAction;
     QAction* m_settingsAction;
     QAction* m_profileMenuAction = nullptr;
+    QAction* m_restoreAction = nullptr;
     std::array<GamepadMode, kMaxGamepads> m_padModes;
     std::array<bool, kMaxGamepads> m_padConnected = {};
     QIcon m_iconMouse;

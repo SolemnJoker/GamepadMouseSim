@@ -251,3 +251,18 @@ target_link_libraries(test_help_overlay_render PRIVATE
     src_core
 )
 
+
+# UI i18n: fallback/language resolution/hot-switch + FULL source scan
+# (every Translations::tr("...") literal in src/ must have an English entry).
+qt_add_executable(test_translations
+    test_translations.cpp
+)
+target_link_libraries(test_translations PRIVATE
+    Qt6::Test
+    Qt6::Core
+    src_core
+)
+target_compile_definitions(test_translations PRIVATE PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+add_test(NAME test_translations COMMAND test_translations)
+set_tests_properties(test_translations PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")

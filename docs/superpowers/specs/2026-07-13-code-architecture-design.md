@@ -72,6 +72,11 @@ Concretely:
 - `core/MappingDefaults` (added 2026-09-13) is the single source of truth
   for default button mappings; `core/ConfigSelftest` implements the
   `--selftest` process check. Both live in `core/` and follow the same rule.
+- `core/Translations` (added 2026-09-13) is the runtime UI translation
+  table (Chinese source → English; `ui.language` selects the language).
+  **All UI string literals must go through `Translations::tr("...")`**;
+  the source-scan test in `tests/test_translations.cpp` enforces that
+  every tr() literal in `src/` has an English entry.
 - `app/` is exempt from the directional rule: it is allowed to depend on
   every other module because its sole job is cross-subsystem wiring.
 

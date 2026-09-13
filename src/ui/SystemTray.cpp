@@ -1,4 +1,5 @@
 #include "SystemTray.h"
+#include "core/Translations.h"
 #include <QApplication>
 #include <QIcon>
 #include <QPainter>
@@ -13,41 +14,41 @@ void fillProfileMenu(QMenu* menu, const QStringList& order, const QString& activ
         action->setChecked(name == active);
     }
     if (order.isEmpty())
-        menu->addAction(QStringLiteral("(无)"))->setEnabled(false);
+        menu->addAction(Translations::tr("(无)"))->setEnabled(false);
 }
 
 SystemTray::SystemTray(QObject* parent) : QObject(parent) {
     std::fill(m_padModes.begin(), m_padModes.end(), GamepadMode::Default);
     std::fill(m_padConnected.begin(), m_padConnected.end(), false);
 
-    m_statusAction = m_menu.addAction("模式: 默认");
+    m_statusAction = m_menu.addAction(Translations::tr("模式: 默认"));
     m_statusAction->setEnabled(false);
     m_menu.addSeparator();
 
     // 操作方案子菜单(构建逻辑在 fillProfileMenu 纯函数中,便于单测)。
-    m_profileMenu.setTitle(QStringLiteral("操作方案"));
+    m_profileMenu.setTitle(Translations::tr("操作方案"));
     m_profileMenuAction = m_menu.addMenu(&m_profileMenu);
 
-    QAction* restoreAction = m_menu.addAction(QStringLiteral("恢复默认配置"));
+    QAction* restoreAction = m_menu.addAction(Translations::tr("恢复默认配置"));
     connect(restoreAction, &QAction::triggered, this, &SystemTray::restoreDefaultsRequested);
 
-    m_settingsAction = m_menu.addAction(QStringLiteral("设置..."));
+    m_settingsAction = m_menu.addAction(Translations::tr("设置..."));
     connect(m_settingsAction, &QAction::triggered, this, &SystemTray::settingsRequested);
 
-    m_switchAction = m_menu.addAction("切换模式");
+    m_switchAction = m_menu.addAction(Translations::tr("切换模式"));
     connect(m_switchAction, &QAction::triggered, this, &SystemTray::switchModeRequested);
 
-    m_lockAction = m_menu.addAction("锁定模式");
+    m_lockAction = m_menu.addAction(Translations::tr("锁定模式"));
     m_lockAction->setCheckable(true);
     connect(m_lockAction, &QAction::triggered, this, &SystemTray::lockModeRequested);
 
-    m_pauseAction = m_menu.addAction("暂停映射");
+    m_pauseAction = m_menu.addAction(Translations::tr("暂停映射"));
     m_pauseAction->setCheckable(true);
     connect(m_pauseAction, &QAction::triggered, this, &SystemTray::pauseRequested);
 
     m_menu.addSeparator();
 
-    QAction* exitAction = m_menu.addAction("退出");
+    QAction* exitAction = m_menu.addAction(Translations::tr("退出"));
     connect(exitAction, &QAction::triggered, this, &SystemTray::exitRequested);
 
     m_trayIcon.setContextMenu(&m_menu);
@@ -56,6 +57,16 @@ SystemTray::SystemTray(QObject* parent) : QObject(parent) {
     m_iconMouse = renderSvg(":/icons/mouse.svg", 32);
     m_iconGamepad = renderSvg(":/icons/gamepad.svg", 32);
     updateIcon(GamepadMode::Default);
+}
+
+void SystemTray::rebuildMenu() {
+    m_switchAction->setText(Translations::tr("切换模式"));
+    m_lockAction->setText(Translations::tr("锁定模式"));
+    m_pauseAction->setText(Translations::tr("暂停映射"));
+    m_restoreAction->setText(Translations::tr("恢复默认配置"));
+    m_settingsAction->setText(Translations::tr("设置..."));
+    m_profileMenu.setTitle(Translations::tr("操作方案"));
+    updateTooltip(); // 刷新状态行(含"模式: 默认"文案)
 }
 
 void SystemTray::show() {

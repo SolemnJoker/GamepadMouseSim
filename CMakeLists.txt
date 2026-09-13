@@ -26,6 +26,7 @@ add_library(src_core STATIC
     src/core/Config.cpp
     src/core/ConfigSelftest.cpp
     src/core/MappingDefaults.cpp
+    src/core/Translations.cpp
     src/core/Types.cpp
 )
 target_include_directories(src_core PUBLIC src)

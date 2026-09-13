@@ -31,6 +31,7 @@ class SettingsDialog : public QDialog {
     void onProfileRename();
     void onProfileDelete();
     void onResetProfileDefaults();
+    void onLanguageChanged();
 
   private:
     void buildGeneralTab();
@@ -62,6 +63,8 @@ class SettingsDialog : public QDialog {
     QCheckBox* m_osdEnabled = nullptr;
     QSpinBox* m_osdDuration = nullptr;
     QCheckBox* m_autostart = nullptr;
+    QComboBox* m_languageCombo = nullptr;
+    QLabel* m_languageHint = nullptr;
 
     // --- Stick tab ---
     QDoubleSpinBox* m_sensX = nullptr;

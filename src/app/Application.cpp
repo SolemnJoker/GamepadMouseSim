@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "core/AutoStart.h"
+#include "core/Translations.h"
 #include "input/KeyboardController.h"
 #include "ui/KeyboardOverlay.h"
 #include "ui/SettingsDialog.h"
@@ -39,6 +40,10 @@ bool Application::initialize() {
     } else {
         qDebug() << "Config loaded successfully";
     }
+
+    // 界面语言(design D3):ui.language → 具体语言;托盘在下方统一重建。
+    Translations::setLanguage(
+        Translations::resolveUiLanguage(m_config.value("ui.language", "system").toString()));
 
     for (int i = 0; i < kMaxGamepads; ++i) {
         m_inputMappers[i]->onConfigChanged();
@@ -100,9 +105,10 @@ bool Application::initialize() {
     connect(&m_systemTray, &SystemTray::profileSwitchRequested, this,
             [this](const QString& name) { m_config.setActiveProfile(name); });
     connect(&m_systemTray, &SystemTray::restoreDefaultsRequested, this, [this]() {
-        if (QMessageBox::question(nullptr, QStringLiteral("恢复默认配置"),
-                                  QStringLiteral("将丢弃全部自定义配置(含所有操作方案),"
-                                                 "恢复为出厂默认。确定继续?")) != QMessageBox::Yes)
+        if (QMessageBox::question(nullptr, Translations::tr("恢复默认配置"),
+                                  Translations::tr("将丢弃全部自定义配置(含所有操作方案),"
+                                                   "恢复为出厂默认。确定继续?")) !=
+            QMessageBox::Yes)
             return;
         m_config.restoreFactoryDefaults();
         m_systemTray.rebuildProfileMenu(m_config.profileOrder(), m_config.activeProfileName());
@@ -126,6 +132,9 @@ bool Application::initialize() {
         }
         m_autoController->onConfigChanged();
         m_keyboardController->onConfigChanged();
+        Translations::setLanguage(
+            Translations::resolveUiLanguage(m_config.value("ui.language", "system").toString()));
+        m_systemTray.rebuildMenu();
         m_systemTray.rebuildProfileMenu(m_config.profileOrder(), m_config.activeProfileName());
 
         // Autostart is the only key this file owns; sync the registry
@@ -152,6 +161,7 @@ bool Application::initialize() {
     AutoStart::applyToRegistry(wantAutostart);
 
     m_gamepadPoller.start();
+    m_systemTray.rebuildMenu();
     m_systemTray.rebuildProfileMenu(m_config.profileOrder(), m_config.activeProfileName());
     for (int i = 0; i < kMaxGamepads; ++i) {
         m_modeManagers[i]->start();

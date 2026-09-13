@@ -168,3 +168,11 @@ void schemaVersion_usesDefaultOnMismatch() {
 - Rollback note: an older build that still implements "too old → reset"
   will discard the `profiles` structure (values remain covered by its
   defaults).
+
+### 2026-09-13: add-ui-i18n (additive, no schema bump)
+
+- New `ui.language` key (`"system"` | `"zh"` | `"en"`, default `"system"`).
+  Purely additive: old configs lacking the `ui` node fall back to
+  `"system"` via the existing default-merge path; no migration runs.
+- `"system"` resolves from the OS UI locale (zh-family → Chinese,
+  otherwise English).
