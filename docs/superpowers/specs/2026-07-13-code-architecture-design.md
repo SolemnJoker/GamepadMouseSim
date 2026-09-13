@@ -69,6 +69,9 @@ Concretely:
 
 - Arrows point **from dependent → dependency**. A file may only depend on
   files at its own level or below.
+- `core/MappingDefaults` (added 2026-09-13) is the single source of truth
+  for default button mappings; `core/ConfigSelftest` implements the
+  `--selftest` process check. Both live in `core/` and follow the same rule.
 - `app/` is exempt from the directional rule: it is allowed to depend on
   every other module because its sole job is cross-subsystem wiring.
 
@@ -92,6 +95,17 @@ public `isEnabled()` / `setEnabled()` and `SettingsDialog` calls them directly.
 After PR1 the only writer of the registry is `Application::initialize()`, and
 the `SettingsDialog` reads/writes through `Config::setValue("autostart.enabled", ...)`.
 No new exceptions will be granted for this kind of bypass.
+
+**Exception (2026-09-12, virtual keyboard).** `KeyboardOverlay` implements the
+`IKeyboardOverlay` interface declared in `src/input/KeyboardController.h` and
+reads layout/highlight state from `KeyboardNavController` for **rendering
+only**. This is a deliberate inversion of the §2.2 concern: `KeyboardOverlay`
+is a dumb view *driven by* the input-level controller (which holds all
+behavior), not UI logic reaching into a subsystem. The dependency direction
+matches the §2.1 diagram (`ui/ → input/` is an allowed edge). The overlay
+holds no pointers to `ModeManager`/`InputMapper`/`AutoModeController`/
+`GamepadPoller` and drives no state changes; unit tests exercise the
+controller against a `FakeOverlay`, keeping the view out of the logic path.
 
 ### 2.3 Config is the single bridge
 
