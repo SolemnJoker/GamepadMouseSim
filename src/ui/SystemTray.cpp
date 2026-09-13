@@ -29,8 +29,8 @@ SystemTray::SystemTray(QObject* parent) : QObject(parent) {
     m_profileMenu.setTitle(Translations::tr("操作方案"));
     m_profileMenuAction = m_menu.addMenu(&m_profileMenu);
 
-    QAction* restoreAction = m_menu.addAction(Translations::tr("恢复默认配置"));
-    connect(restoreAction, &QAction::triggered, this, &SystemTray::restoreDefaultsRequested);
+    m_restoreAction = m_menu.addAction(Translations::tr("恢复默认配置"));
+    connect(m_restoreAction, &QAction::triggered, this, &SystemTray::restoreDefaultsRequested);
 
     m_settingsAction = m_menu.addAction(Translations::tr("设置..."));
     connect(m_settingsAction, &QAction::triggered, this, &SystemTray::settingsRequested);
