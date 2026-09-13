@@ -10,7 +10,10 @@ Compact repo-specific notes for OpenCode sessions. Full architecture lives in `C
 
 ## Build
 
-Qt path is **hardcoded** in `CMakeLists.txt:10` to `C:/Qt/6.8.3/msvc2022_64`. Edit that line if Qt is elsewhere.
+Qt is discovered via `find_package(Qt6 ...)` — no hardcoded install path. Pass
+`-DCMAKE_PREFIX_PATH="C:/Qt/<version>/<kit>"` at configure time (or set the
+`CMAKE_PREFIX_PATH` environment variable). The existing `build/` cache already
+knows the local path, so incremental builds need nothing extra.
 
 ```bash
 # MSVC + Ninja (from repo root)

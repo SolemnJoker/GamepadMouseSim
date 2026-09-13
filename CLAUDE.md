@@ -16,7 +16,7 @@ Full input reference lives in `README.md` (Chinese). This file only covers archi
 
 ## Build & Run
 
-CMakeLists hardcodes the Qt path to `C:/Qt/6.8.3/msvc2022_64` and links `xinput` + `dxgi` (for GPU usage). Reconfigure if Qt is elsewhere.
+Qt is discovered via `find_package`; pass `-DCMAKE_PREFIX_PATH=<your Qt install>` when configuring a fresh build tree (the committed `build/` cache already knows the local path). Links `xinput` + `dxgi` (for GPU usage).
 
 ```bash
 # Configure + build (MSVC)

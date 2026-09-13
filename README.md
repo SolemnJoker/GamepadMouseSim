@@ -28,13 +28,14 @@
 ### 从源码构建
 
 ```bash
-# 依赖:Qt 6.8.3 (msvc2022_64)、Visual Studio 2022、CMake ≥ 3.20
-cmake -S . -B build
+# 依赖:Qt 6(Widgets + Svg,项目基于 6.8.3 开发)、MSVC 2022、CMake ≥ 3.20
+# -DCMAKE_PREFIX_PATH 指向你的 Qt 安装目录(含 bin/、lib/cmake/Qt6 的那一层)
+cmake -S . -B build -DCMAKE_PREFIX_PATH="C:/Qt/6.8.3/msvc2022_64"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure   # 自动化测试全绿
 ```
 
-Qt 安装路径硬编码在 `CMakeLists.txt`(`C:/Qt/6.8.3/msvc2022_64`),路径不同请修改该行。构建后可直接运行 `build/Release/GamepadMouseSim.exe`,配置文件会自动生成。
+Qt 路径也可以通过 `CMAKE_PREFIX_PATH` 环境变量提供;仓库内没有任何硬编码的本机路径。构建后直接运行 `build/Release/GamepadMouseSim.exe`,配置文件会自动生成。
 
 ## 🎮 基本操作
 

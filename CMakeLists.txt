@@ -7,8 +7,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(Qt6_DIR "C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6")
-
+# Qt is discovered via the standard CMake package mechanism — no hardcoded
+# install path. Point the build at your Qt install with either
+#   cmake -B build -DCMAKE_PREFIX_PATH="C:/Qt/<version>/<kit>"
+# or the CMAKE_PREFIX_PATH environment variable.
 find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
 
 # src_core: pure config + types static lib (no Win32/gamepad/input/ui deps).
